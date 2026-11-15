@@ -23,8 +23,11 @@ import { strings as t } from "@/lib/strings";
  */
 
 export type SelectionMenuHandle = {
-  /** Opens (or closes) the card for every verse on the sheet in view, above `from`. */
-  toggleForSheet: (from: HTMLElement) => void;
+  /**
+   * Opens (or closes) the card for every verse on the sheet in view, above
+   * `from`. `instant` when a key opened it: then it appears with no entrance.
+   */
+  toggleForSheet: (from: HTMLElement, instant?: boolean) => void;
 };
 
 type Box = { left: number; top: number; right: number; bottom: number };
@@ -35,6 +38,8 @@ type Target = {
   anchor: Box;
   via: "selection" | "button";
   returnFocus: HTMLElement | null;
+  /** Opened from the keyboard: no entrance animation. */
+  instant: boolean;
 };
 
 type Translation =
@@ -45,6 +50,9 @@ type Translation =
 
 const GAP = 10;
 const EDGE = 12;
+/** The same curve as --ease-out in globals.css (WAAPI cannot read CSS variables). */
+const EASE_OUT = "cubic-bezier(0.23, 1, 0.32, 1)";
+const SLIDE_MS = 200;
 
 const noSubscription = () => () => {};
 const canSpeak = () => "speechSynthesis" in window;
@@ -147,7 +155,7 @@ export function SelectionMenu({
   useImperativeHandle(
     ref,
     () => ({
-      toggleForSheet: (from) => {
+      toggleForSheet: (from, instant = false) => {
         if (shown.current?.via === "button") {
           close();
           return;
@@ -165,6 +173,7 @@ export function SelectionMenu({
           anchor: toBox(from.getBoundingClientRect()),
           via: "button",
           returnFocus: from,
+          instant,
         });
       },
     }),
@@ -201,7 +210,14 @@ export function SelectionMenu({
         setTarget({ ...was, anchor });
         return;
       }
-      open({ text, word: singleWord(text), anchor, via: "selection", returnFocus: null });
+      open({
+        text,
+        word: singleWord(text),
+        anchor,
+        via: "selection",
+        returnFocus: null,
+        instant: false,
+      });
     };
 
     const onDown = (e: PointerEvent) => {
@@ -309,10 +325,22 @@ export function SelectionMenu({
 
   /* -------------------------------------------------------------- placing */
 
+  // Where the card was last placed, and where it stood on screen just before
+  // it moved, so it can slide to its new place instead of jumping (a
+  // translation arriving makes it taller, and above a selection it grows up).
+  const placed = useRef(place);
+  const slideFrom = useRef<{ x: number; y: number } | null>(null);
+  const slide = useRef<Animation | null>(null);
+  useLayoutEffect(() => {
+    placed.current = place;
+  }, [place]);
+
   useLayoutEffect(() => {
     const card = cardRef.current;
     if (!target || !card) return;
-    const { width, height } = card.getBoundingClientRect();
+    // Layout size, unaffected by the card's own entrance or slide.
+    const width = card.offsetWidth;
+    const height = card.offsetHeight;
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const a = target.anchor;
@@ -332,10 +360,34 @@ export function SelectionMenu({
       Math.max(EDGE, (a.left + a.right) / 2 - width / 2),
       Math.max(EDGE, vw - EDGE - width),
     );
-    setPlace((was) =>
-      was && was.x === x && was.y === y && was.side === side ? was : { x, y, side },
-    );
+    const was = placed.current;
+    if (was && was.x === x && was.y === y && was.side === side) return;
+    if (was) {
+      const box = card.getBoundingClientRect();
+      slideFrom.current = { x: box.left, y: box.top };
+    }
+    setPlace({ x, y, side });
   }, [target, translation, shared, speaking]);
+
+  // FLIP: put the card back where it was seen, then let it glide home. Starts
+  // from wherever it is on screen, so a second move mid-slide carries on.
+  useLayoutEffect(() => {
+    const from = slideFrom.current;
+    slideFrom.current = null;
+    const card = cardRef.current;
+    if (!from || !card || !place) return;
+    slide.current?.cancel();
+    slide.current = null;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const box = card.getBoundingClientRect();
+    const dx = from.x - box.left;
+    const dy = from.y - box.top;
+    if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
+    slide.current = card.animate(
+      [{ transform: `translate(${dx}px, ${dy}px)` }, { transform: "none" }],
+      { duration: SLIDE_MS, easing: EASE_OUT },
+    );
+  }, [place]);
 
   // Opened from the button, focus goes into the card. Opened over a
   // selection, it stays put so the reader can keep adjusting it.
@@ -442,6 +494,7 @@ export function SelectionMenu({
       role="dialog"
       aria-label={target.via === "button" ? t.wholeSheetMenu : t.selectionMenu}
       data-lado={place?.side ?? "above"}
+      data-instantaneo={target.instant || undefined}
       style={
         {
           left: place?.x ?? 0,
@@ -506,7 +559,10 @@ export function SelectionMenu({
             data-estado={shared === "idle" ? undefined : shared}
             {...shortcut(t.shortcuts.share)}
           >
-            {shared === "copied" ? <IconCheck /> : <IconShare />}
+            {/* Keyed, so the check is a new element and fades into place. */}
+            <span className="menu-icone" key={shared === "copied" ? "check" : "share"}>
+              {shared === "copied" ? <IconCheck /> : <IconShare />}
+            </span>
             <span>
               {shared === "copied" ? t.shareCopied : shared === "failed" ? t.shareFailed : t.share}
             </span>

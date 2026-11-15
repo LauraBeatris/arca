@@ -289,7 +289,8 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
         case t.shortcuts.more.toUpperCase(): {
           const more = moreButton.current;
           if (!now.picked || !more) return;
-          menu.current?.toggleForSheet(more);
+          // From a key, so it opens at once, with no entrance.
+          menu.current?.toggleForSheet(more, true);
           break;
         }
         default:
@@ -465,7 +466,7 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
         <div className="comandos" role="group" aria-label={t.controlsLabel}>
           {!picked ? (
             <>
-              <div className="comandos-grupo">
+              <div className="comandos-grupo" key="pilha-percorrer">
                 <DeskButton onPress={previous} disabled={top === 0}>
                   <span aria-hidden="true">←</span> {t.previousPoem}
                 </DeskButton>
@@ -477,7 +478,7 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
                   {t.nextPoem} <span aria-hidden="true">→</span>
                 </DeskButton>
               </div>
-              <div className="comandos-grupo">
+              <div className="comandos-grupo" key="pilha-pegar">
                 <DeskButton primary ref={pickUpButton} onPress={() => pickUp(top)}>
                   {t.pickUp}
                 </DeskButton>
@@ -486,7 +487,7 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
           ) : (
             <>
               {sheetCount > 1 && (
-                <div className="comandos-grupo">
+                <div className="comandos-grupo" key="folha-paginas">
                   <DeskButton onPress={() => turn(-1)} disabled={flipped || page === 0}>
                     <span aria-hidden="true">←</span> {t.previousPage}
                   </DeskButton>
@@ -504,13 +505,15 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
                   </DeskButton>
                 </div>
               )}
-              <div className="comandos-grupo">
+              <div className="comandos-grupo" key="folha-acoes">
                 {!flipped && (
                   <DeskButton
                     ref={moreButton}
                     shortcut={t.shortcuts.more}
-                    onPress={() => {
-                      if (moreButton.current) menu.current?.toggleForSheet(moreButton.current);
+                    onPress={(event) => {
+                      // A click with detail 0 came from Enter or Space.
+                      const more = moreButton.current;
+                      if (more) menu.current?.toggleForSheet(more, event.detail === 0);
                     }}
                   >
                     {t.moreActions}
@@ -641,7 +644,7 @@ function DeskButton({
   ref,
   children,
 }: {
-  onPress: () => void;
+  onPress: (event: React.MouseEvent<HTMLButtonElement>) => void;
   disabled?: boolean;
   primary?: boolean;
   quiet?: boolean;
@@ -658,8 +661,8 @@ function DeskButton({
       data-variante={primary ? "principal" : quiet ? "discreto" : undefined}
       aria-disabled={disabled || undefined}
       aria-keyshortcuts={shortcut?.toUpperCase()}
-      onClick={() => {
-        if (!disabled) onPress();
+      onClick={(event) => {
+        if (!disabled) onPress(event);
       }}
     >
       {children}

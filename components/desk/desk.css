@@ -483,6 +483,15 @@
   justify-content: center;
   gap: 8px;
   pointer-events: auto;
+  /* Picking a sheet up swaps the buttons; the new ones fade in rather than
+     blink. Opacity only and quick, since this can come from a key. */
+  transition: opacity 160ms var(--ease-out);
+}
+
+@starting-style {
+  .comandos-grupo {
+    opacity: 0;
+  }
 }
 
 /* Quiet switches in the top corners: sound on the right, and on touch
@@ -521,7 +530,13 @@
   touch-action: manipulation;
   --chama: 0.94;
   --vento: 0deg;
-  transition: filter 0.4s ease;
+  transition:
+    filter 0.4s ease,
+    transform 160ms var(--ease-out);
+}
+
+.vela:active {
+  transform: scale(0.95);
 }
 
 @media (max-width: 639px) {
@@ -599,7 +614,7 @@
   transition:
     background-color 0.15s ease,
     border-color 0.15s ease,
-    transform 0.12s ease;
+    transform 160ms var(--ease-out);
 }
 
 .botao[data-variante="principal"] {
@@ -658,7 +673,7 @@
   transform-origin: 11px 12px;
   transition:
     opacity 0.2s ease,
-    transform 0.25s cubic-bezier(0.23, 1, 0.32, 1);
+    transform 0.25s var(--ease-out);
 }
 .som-mudo {
   transform-origin: 17.3px 12px;
@@ -761,7 +776,7 @@
   font-size: 0.875rem;
   -webkit-user-select: none;
   user-select: none;
-  animation: menu-entra 0.16s cubic-bezier(0.2, 0.8, 0.2, 1);
+  animation: menu-entra 160ms var(--ease-out);
   transform-origin: 50% 100%;
 }
 
@@ -785,6 +800,11 @@
     opacity: 0;
     transform: translateY(-4px) scale(0.97);
   }
+}
+
+/* Opened with a key: it is simply there (also with reduced motion, below). */
+.mesa .menu-selecao[data-instantaneo] {
+  animation: none;
 }
 
 .menu-acoes {
@@ -852,6 +872,27 @@
   color: #2f6b3a;
 }
 
+.menu-icone {
+  display: flex;
+  flex: none;
+}
+
+/* The check comes into focus where the share arrow was. */
+.menu-acoes [data-estado="copied"] .menu-icone {
+  transition:
+    opacity 200ms var(--ease-out),
+    transform 200ms var(--ease-out),
+    filter 200ms var(--ease-out);
+}
+
+@starting-style {
+  .menu-acoes [data-estado="copied"] .menu-icone {
+    opacity: 0;
+    transform: scale(0.9);
+    filter: blur(2px);
+  }
+}
+
 .menu-acoes [data-estado="failed"] {
   color: var(--lacre);
 }
@@ -887,6 +928,20 @@
 
 .menu-traducao:empty {
   display: none;
+}
+
+.menu-traducao > * {
+  transition:
+    opacity 200ms var(--ease-out),
+    transform 200ms var(--ease-out);
+}
+
+/* A translation (or an error) arriving fades up into the card. */
+@starting-style {
+  .menu-traducao > * {
+    opacity: 0;
+    transform: translateY(4px);
+  }
 }
 
 .menu-traducao {
@@ -955,6 +1010,20 @@
   .menu-selecao,
   .menu-selecao[data-lado="below"] {
     animation-name: menu-aparece;
+  }
+  /* The candle still answers a press, without moving. */
+  .vela {
+    transition: filter 0.4s ease;
+  }
+  .vela:active {
+    transform: none;
+  }
+  /* New things in the card fade in where they are. */
+  .menu-traducao > * {
+    transition: opacity 200ms ease;
+  }
+  .menu-acoes [data-estado="copied"] .menu-icone {
+    transition: opacity 200ms ease;
   }
 }
 

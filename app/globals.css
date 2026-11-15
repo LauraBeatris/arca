@@ -5,6 +5,9 @@
   --lacre: #a92b22; /* wax-seal red: clips and bookmarks */
   --creme: #efe6d2;
   --madeira: #3a2414;
+
+  /* Motion: a strong ease-out for things that enter, answer or settle. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 *,
@@ -78,6 +81,27 @@ body {
   color: #1b130c;
   font-size: 0.95rem;
   text-align: center;
+  /* Laid down on the desk a moment after it appears. */
+  animation: aviso-pousa 320ms var(--ease-out) 250ms both;
+}
+
+@keyframes aviso-pousa {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -10px) rotate(-3deg);
+  }
+}
+
+@keyframes aviso-aparece {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aviso-mesa {
+    animation-name: aviso-aparece;
+  }
 }
 
 .aviso-mesa a {
