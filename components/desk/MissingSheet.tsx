@@ -1,0 +1,22 @@
+"use client";
+
+import Link from "next/link";
+import { useState } from "react";
+import { usePathname } from "next/navigation";
+import { strings as t } from "@/lib/strings";
+
+/**
+ * Shown over the desk when someone opens the URL of a poem that is not in the
+ * pile. The pile itself stays usable underneath; the note leaves as soon as a
+ * real sheet is picked up.
+ */
+export function MissingSheet() {
+  const pathname = usePathname();
+  const [missing] = useState(pathname);
+  if (pathname !== missing) return null;
+  return (
+    <p className="aviso-mesa" role="status">
+      {t.notFoundTitle} <Link href="/">{t.notFoundBack}</Link>
+    </p>
+  );
+}

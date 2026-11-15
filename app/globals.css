@@ -1,49 +1,91 @@
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Colour comes from objects. Paper and ink are the base. */
+  --cobalto: #1d46a6; /* azulejo cobalt: Laura's ink */
+  --amarelo: #f3c300; /* Lisbon tram yellow: visitor highlights, focus */
+  --lacre: #a92b22; /* wax-seal red: clips and bookmarks */
+  --creme: #efe6d2;
+  --madeira: #140c07;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-html {
-  height: 100%;
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 html,
 body {
-  max-width: 100vw;
-  overflow-x: hidden;
+  height: 100%;
+  margin: 0;
+  background: var(--madeira);
+  color: var(--creme);
+  overscroll-behavior: none;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-serif), "Iowan Old Style", "Palatino Linotype", Georgia, serif;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
 }
 
-* {
-  box-sizing: border-box;
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
   padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.aviso {
+  min-height: 100dvh;
+  display: grid;
+  place-content: center;
+  gap: 1rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+.aviso a {
+  color: var(--creme);
+  text-underline-offset: 0.2em;
+}
+
+.aviso a:focus-visible {
+  outline: 2px solid var(--amarelo);
+  outline-offset: 4px;
+}
+
+/* A slip of paper laid over the desk: "that sheet is not here". */
+.aviso-mesa {
+  position: fixed;
+  z-index: 200;
+  top: calc(max(14px, env(safe-area-inset-top)) + 52px);
+  left: 50%;
+  width: max-content;
+  max-width: calc(100vw - 32px);
   margin: 0;
+  padding: 0.7em 1.1em;
+  transform: translateX(-50%) rotate(-1deg);
+  border-radius: 2px;
+  background: var(--creme);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.45);
+  color: #1b130c;
+  font-size: 0.95rem;
+  text-align: center;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+.aviso-mesa a {
+  color: var(--cobalto);
+  text-underline-offset: 0.2em;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
+.aviso-mesa a:focus-visible {
+  outline: 2px solid var(--cobalto);
+  outline-offset: 3px;
 }
