@@ -2,7 +2,9 @@
  * Desk sounds: paper sliding, lifting, landing, turning, and the candle.
  *
  * Like the paper, the sounds are made here rather than recorded: each one is
- * shaped noise (see `rustle` and `thump`). To use a recording instead, give a
+ * shaped noise (a `rustle` is the hiss of paper moving, `snaps` are the small
+ * clicks of a sheet bending, a `thump` is it landing). To use a recording
+ * instead, give a
  * sound a `src` in SOUNDS; the recipe is then only the fallback while the file
  * loads or if it fails.
  *
@@ -45,7 +47,20 @@ type Thump = {
   cutoff: number;
 };
 
-type Layer = Rustle | Thump;
+/** A scatter of tiny clicks: the sound of a sheet buckling as it bends. */
+type Snaps = {
+  kind: "snaps";
+  at?: number;
+  /** The clicks fall inside this window, bunched towards its middle. */
+  dur: number;
+  count: number;
+  gain: number;
+  /** Each click rings somewhere in this range (Hz). */
+  from: number;
+  to: number;
+};
+
+type Layer = Rustle | Thump | Snaps;
 
 type Sound = {
   /** Optional recording to play instead of the recipe. */
@@ -78,22 +93,41 @@ export const SOUNDS: Record<SoundId, Sound> = {
       { kind: "rustle", at: 0.26, dur: 0.08, gain: 0.05, from: 2600, to: 1800, q: 0.9, crackle: 0.3, attack: 0.004 },
     ],
   },
+  // Turning a page at home is not one hiss. Fingers catch the sheet (a few
+  // clicks), it bends and crosses over (a soft breath of air with the sheet
+  // snapping as it buckles), then it settles on the others (a light pat).
   page: {
     recipe: [
-      { kind: "rustle", dur: 0.34, gain: 0.1, from: 1800, to: 6000, q: 0.9, crackle: 0.7, attack: 0.05 },
-      { kind: "rustle", at: 0.23, dur: 0.16, gain: 0.06, from: 5200, to: 2600, q: 0.9, crackle: 0.5, attack: 0.02 },
+      { kind: "snaps", dur: 0.06, count: 4, gain: 0.09, from: 2600, to: 6200 },
+      { kind: "rustle", at: 0.03, dur: 0.33, gain: 0.04, from: 900, to: 2600, q: 0.5, crackle: 0.35, attack: 0.12 },
+      { kind: "rustle", at: 0.06, dur: 0.26, gain: 0.035, from: 3000, to: 6400, q: 0.7, crackle: 0.85, attack: 0.1 },
+      { kind: "snaps", at: 0.07, dur: 0.26, count: 10, gain: 0.085, from: 1800, to: 5400 },
+      { kind: "thump", at: 0.34, dur: 0.07, gain: 0.06, cutoff: 430 },
+      { kind: "rustle", at: 0.34, dur: 0.07, gain: 0.045, from: 3200, to: 1800, q: 0.9, crackle: 0.4, attack: 0.004 },
+      { kind: "snaps", at: 0.345, dur: 0.05, count: 3, gain: 0.055, from: 2000, to: 4200 },
     ],
   },
   pageBack: {
     recipe: [
-      { kind: "rustle", dur: 0.3, gain: 0.09, from: 5600, to: 2000, q: 0.9, crackle: 0.7, attack: 0.04 },
-      { kind: "thump", at: 0.3, dur: 0.07, gain: 0.08, cutoff: 200 },
+      { kind: "snaps", dur: 0.05, count: 3, gain: 0.08, from: 2200, to: 5200 },
+      { kind: "rustle", at: 0.02, dur: 0.31, gain: 0.04, from: 2400, to: 850, q: 0.5, crackle: 0.35, attack: 0.1 },
+      { kind: "rustle", at: 0.04, dur: 0.24, gain: 0.035, from: 6000, to: 2800, q: 0.7, crackle: 0.85, attack: 0.08 },
+      { kind: "snaps", at: 0.05, dur: 0.24, count: 9, gain: 0.085, from: 1700, to: 5000 },
+      { kind: "thump", at: 0.31, dur: 0.075, gain: 0.075, cutoff: 400 },
+      { kind: "rustle", at: 0.31, dur: 0.08, gain: 0.05, from: 3000, to: 1700, q: 0.9, crackle: 0.4, attack: 0.004 },
+      { kind: "snaps", at: 0.315, dur: 0.05, count: 3, gain: 0.06, from: 1900, to: 4000 },
     ],
   },
+  // Turning the whole sheet over: the same gesture, slower and a little deeper.
   flip: {
     recipe: [
-      { kind: "rustle", dur: 0.42, gain: 0.085, from: 1400, to: 3800, q: 0.7, crackle: 0.5, attack: 0.09 },
-      { kind: "rustle", at: 0.32, dur: 0.13, gain: 0.05, from: 3200, to: 2000, q: 0.9, crackle: 0.4, attack: 0.01 },
+      { kind: "snaps", dur: 0.07, count: 4, gain: 0.08, from: 2200, to: 5200 },
+      { kind: "rustle", at: 0.04, dur: 0.41, gain: 0.042, from: 700, to: 2100, q: 0.5, crackle: 0.35, attack: 0.16 },
+      { kind: "rustle", at: 0.08, dur: 0.32, gain: 0.032, from: 2600, to: 5200, q: 0.7, crackle: 0.8, attack: 0.12 },
+      { kind: "snaps", at: 0.09, dur: 0.32, count: 11, gain: 0.08, from: 1500, to: 4600 },
+      { kind: "thump", at: 0.43, dur: 0.08, gain: 0.07, cutoff: 380 },
+      { kind: "rustle", at: 0.43, dur: 0.08, gain: 0.045, from: 2800, to: 1600, q: 0.9, crackle: 0.4, attack: 0.004 },
+      { kind: "snaps", at: 0.435, dur: 0.06, count: 3, gain: 0.055, from: 1800, to: 3800 },
     ],
   },
   light: {
@@ -117,9 +151,43 @@ export function playRecipe(
   recipe: Layer[],
   when: number,
 ) {
+  // No two page turns sound alike: each play runs a little faster or slower,
+  // and sits a little higher or lower.
+  const pace = 0.9 + Math.random() * 0.22;
+  const tune = 0.88 + Math.random() * 0.26;
+  const offset = () => Math.random() * (noise.duration - 0.1);
+
   for (const layer of recipe) {
-    const start = when + (layer.at ?? 0);
-    const end = start + layer.dur;
+    const start = when + (layer.at ?? 0) * pace;
+    const dur = layer.dur * pace;
+    const end = start + dur;
+
+    if (layer.kind === "snaps") {
+      for (let i = 0; i < layer.count; i++) {
+        // Two random numbers averaged: clicks bunch towards the middle.
+        const at = start + (dur * (Math.random() + Math.random())) / 2;
+        const ring = 0.004 + Math.random() * 0.009;
+        const source = ctx.createBufferSource();
+        source.buffer = noise;
+        const band = ctx.createBiquadFilter();
+        band.type = "bandpass";
+        band.Q.value = 1.2 + Math.random() * 1.6;
+        band.frequency.value =
+          (layer.from + Math.random() * (layer.to - layer.from)) * tune;
+        const click = ctx.createGain();
+        click.gain.setValueAtTime(0, at);
+        click.gain.linearRampToValueAtTime(
+          layer.gain * 5 * (0.35 + 0.65 * Math.random()),
+          at + 0.0005,
+        );
+        click.gain.exponentialRampToValueAtTime(0.0001, at + ring);
+        source.connect(band).connect(click).connect(out);
+        source.start(at, offset());
+        source.stop(at + ring + 0.02);
+      }
+      continue;
+    }
+
     const source = ctx.createBufferSource();
     source.buffer = noise;
     source.loop = true;
@@ -129,7 +197,7 @@ export function playRecipe(
     if (layer.kind === "thump") {
       const lowpass = ctx.createBiquadFilter();
       lowpass.type = "lowpass";
-      lowpass.frequency.value = layer.cutoff;
+      lowpass.frequency.value = layer.cutoff * tune;
       // Low-passed noise is quiet, so the level is lifted to compensate.
       envelope.gain.linearRampToValueAtTime(layer.gain * 6, start + 0.006);
       envelope.gain.exponentialRampToValueAtTime(0.0001, end);
@@ -138,29 +206,29 @@ export function playRecipe(
       const band = ctx.createBiquadFilter();
       band.type = "bandpass";
       band.Q.value = layer.q ?? 0.8;
-      band.frequency.setValueAtTime(layer.from, start);
-      band.frequency.exponentialRampToValueAtTime(layer.to, end);
+      band.frequency.setValueAtTime(layer.from * tune, start);
+      band.frequency.exponentialRampToValueAtTime(layer.to * tune, end);
       const highpass = ctx.createBiquadFilter();
       highpass.type = "highpass";
       highpass.frequency.value = Math.min(700, Math.min(layer.from, layer.to) * 0.5);
 
-      const attack = Math.min(layer.attack ?? 0.03, layer.dur * 0.5);
+      const attack = Math.min((layer.attack ?? 0.03) * pace, dur * 0.5);
       envelope.gain.linearRampToValueAtTime(layer.gain * 3, start + attack);
-      envelope.gain.setTargetAtTime(0, start + layer.dur * 0.45, layer.dur * 0.2);
+      envelope.gain.setTargetAtTime(0, start + Math.max(attack, dur * 0.45), dur * 0.2);
 
       // Paper does not hiss evenly: its loudness jitters as fibres catch.
       const grain = ctx.createGain();
       const crackle = layer.crackle ?? 0;
       if (crackle > 0) {
-        const points = Math.max(4, Math.round(layer.dur * 110));
+        const points = Math.max(4, Math.round(dur * 110));
         const curve = new Float32Array(points);
         for (let i = 0; i < points; i++) curve[i] = 1 - crackle * Math.random();
-        grain.gain.setValueCurveAtTime(curve, start, layer.dur);
+        grain.gain.setValueCurveAtTime(curve, start, dur);
       }
       source.connect(band).connect(highpass).connect(grain).connect(envelope).connect(out);
     }
 
-    source.start(start, Math.random() * (noise.duration - 0.1));
+    source.start(start, offset());
     source.stop(end + 0.5);
   }
 }
