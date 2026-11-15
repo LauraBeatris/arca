@@ -11,6 +11,7 @@
 .mesa {
   --topo: 78px; /* space kept for the title */
   --barra: 96px; /* space kept for the buttons */
+  --sob-pilha: 0px; /* space kept under the pile (for the candle on phones) */
   --folha-w: clamp(
     220px,
     min(92vw, calc((100dvh - var(--barra) - 40px) / 1.42)),
@@ -18,7 +19,9 @@
   );
   --folha-h: calc(var(--folha-w) * 1.42);
   --s-pilha: 0.8;
-  --pilha-y: calc(var(--topo) + (100dvh - var(--topo) - var(--barra)) / 2);
+  --pilha-y: calc(
+    var(--topo) + (100dvh - var(--topo) - var(--barra) - var(--sob-pilha)) / 2
+  );
   --pegada-y: calc((100dvh - var(--barra)) / 2 + 4px);
 
   position: fixed;
@@ -40,6 +43,10 @@
   .mesa {
     --topo: 68px;
     --s-pilha: 0.9;
+    /* Too narrow to stand the candle beside the pile: it goes below it,
+       above the buttons, and the pile moves up to make room. The candle is
+       52px at this width; plain px because the engine parses this value. */
+    --sob-pilha: 72px;
   }
 }
 
@@ -514,7 +521,8 @@
 
 /* Placed here by CSS alone; the engine reads the position to know where the
    candle's light comes from. Beside the pile's lower right corner when there
-   is room, otherwise in the bottom right corner of the desk. */
+   is room; on phones, below the pile's right corner, in the strip kept clear
+   by --sob-pilha, between the pile and the buttons. */
 .vela {
   position: absolute;
   z-index: 90;
@@ -540,11 +548,15 @@
 }
 
 @media (max-width: 639px) {
+  /* Just under the pile's corner, never lower than the strip allows. The
+     26px clears the rotated sheets beneath the top one. */
   .vela {
-    top: auto;
+    top: min(
+      calc(var(--pilha-y) + var(--folha-h) * var(--s-pilha) / 2 + 26px),
+      calc(100dvh - var(--barra) - 6px - var(--vela))
+    );
     left: auto;
-    right: max(10px, env(safe-area-inset-right));
-    bottom: max(18px, env(safe-area-inset-bottom));
+    right: max(14px, env(safe-area-inset-right));
   }
 }
 

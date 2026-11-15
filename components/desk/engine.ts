@@ -297,16 +297,18 @@ export class DeskEngine {
     const style = getComputedStyle(this.root);
     const top = parseFloat(style.getPropertyValue("--topo")) || 64;
     const bar = parseFloat(style.getPropertyValue("--barra")) || 96;
+    // On phones a strip under the pile is kept for the candle.
+    const under = parseFloat(style.getPropertyValue("--sob-pilha")) || 0;
     const sheet = this.poems[0]?.sheetEls[0];
     this.W = sheet?.offsetWidth || 400;
     this.H = sheet?.offsetHeight || 568;
     this.pileScale = Math.min(
       this.vw < 640 ? 0.9 : 0.8,
-      (this.vh - top - bar - 12) / this.H,
+      (this.vh - top - bar - under - 12) / this.H,
       (this.vw - 28) / this.W,
     );
     this.pileX = this.vw / 2;
-    this.pileY = top + (this.vh - top - bar) / 2;
+    this.pileY = top + (this.vh - top - bar - under) / 2;
     // Land the picked-up sheet on whole pixels so its text stays sharp.
     this.pickedY =
       Math.round(Math.max(8, (this.vh - bar - this.H) / 2 + 4)) + this.H / 2;
