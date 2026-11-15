@@ -42,8 +42,12 @@ const pt = {
     cancioneiro: "Cancioneiro",
   },
 
-  tiltOn: "Mover a luz inclinando",
-  tiltOff: "Deixar a luz parada",
+  tiltOn: "Inclinar a luz",
+  tiltOff: "Parar a luz",
+  soundOff: "Silenciar",
+  soundOn: "Ativar som",
+  candleOff: "Apagar a vela",
+  candleOn: "Acender a vela",
   tiltDenied: "Sem acesso ao movimento do aparelho.",
 
   notFoundTitle: "Esta folha não está na arca.",

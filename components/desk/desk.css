@@ -9,7 +9,7 @@
  */
 
 .mesa {
-  --topo: 64px; /* space kept for the title */
+  --topo: 78px; /* space kept for the title */
   --barra: 96px; /* space kept for the buttons */
   --folha-w: clamp(
     220px,
@@ -24,7 +24,8 @@
   position: fixed;
   inset: 0;
   overflow: hidden;
-  background: radial-gradient(120% 90% at 30% 20%, #2b1a10 0%, #170e08 55%, #0b0705 100%);
+  background: radial-gradient(120% 90% at 30% 20%, #6b452a 0%, #452b18 55%, #2a1a0e 100%);
+  --vela: clamp(52px, 5.4vw, 74px);
   color: var(--creme);
 }
 
@@ -37,7 +38,7 @@
 
 @media (max-width: 639px) {
   .mesa {
-    --topo: 58px;
+    --topo: 68px;
     --s-pilha: 0.9;
   }
 }
@@ -60,21 +61,28 @@
 
 /* ------------------------------------------------------------------ title */
 
+/* Centred over the pile, like the title on a book's cover. */
 .mesa-topo {
   position: absolute;
   z-index: 1;
   top: max(14px, env(safe-area-inset-top));
-  left: max(20px, env(safe-area-inset-left));
-  right: 20px;
+  left: 0;
+  right: 0;
   display: flex;
-  align-items: baseline;
-  gap: 0.9em;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2em;
+  padding-inline: 16px;
+  text-align: center;
+  text-shadow: 0 1px 3px rgb(20 10 4 / 0.55);
   pointer-events: none;
   transition: opacity 0.4s ease;
 }
 
 .mesa-topo h1 {
   margin: 0;
+  /* Letter-spacing adds a gap after the last letter; this re-centres it. */
+  padding-left: 0.24em;
   font-size: 1.35rem;
   font-weight: 400;
   letter-spacing: 0.24em;
@@ -85,11 +93,12 @@
   margin: 0;
   font-size: 0.86rem;
   font-style: italic;
-  opacity: 0.72;
+  opacity: 0.82;
 }
 
+/* A sheet held up to read covers the title, so the title steps back. */
 .mesa[data-pegada] .mesa-topo {
-  opacity: 0.28;
+  opacity: 0;
 }
 
 @media (max-width: 639px) {
@@ -476,12 +485,93 @@
   pointer-events: auto;
 }
 
-/* The lamp-by-tilt switch, top right (touch devices only). */
-.luz {
+/* Quiet switches in the top corners: sound on the right, and on touch
+   devices the lamp-by-tilt switch on the left. */
+.canto {
   position: absolute;
   z-index: 100;
-  top: max(4px, env(safe-area-inset-top));
-  right: max(8px, env(safe-area-inset-right));
+  top: max(6px, env(safe-area-inset-top));
+}
+
+.canto-esquerdo {
+  left: max(6px, env(safe-area-inset-left));
+}
+
+.canto-direito {
+  right: max(6px, env(safe-area-inset-right));
+}
+
+/* ----------------------------------------------------------------- candle */
+
+/* Placed here by CSS alone; the engine reads the position to know where the
+   candle's light comes from. Beside the pile's lower right corner when there
+   is room, otherwise in the bottom right corner of the desk. */
+.vela {
+  position: absolute;
+  z-index: 90;
+  left: calc(50vw + var(--folha-w) * var(--s-pilha) / 2 + 30px);
+  top: calc(var(--pilha-y) + var(--folha-h) * var(--s-pilha) / 2 - var(--vela) - 18px);
+  width: var(--vela);
+  height: var(--vela);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+  touch-action: manipulation;
+  --chama: 0.94;
+  --vento: 0deg;
+  transition: filter 0.4s ease;
+}
+
+@media (max-width: 639px) {
+  .vela {
+    top: auto;
+    left: auto;
+    right: max(10px, env(safe-area-inset-right));
+    bottom: max(18px, env(safe-area-inset-bottom));
+  }
+}
+
+.vela svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.vela-corpo {
+  filter: drop-shadow(2px 5px 4px rgb(0 0 0 / 0.5));
+}
+
+.vela-halo {
+  opacity: var(--chama);
+}
+
+.vela-chama {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  transform: rotate(var(--vento)) scale(calc(0.72 + 0.3 * var(--chama)));
+}
+
+.vela-halo,
+.vela-chama {
+  transition: opacity 0.35s ease;
+}
+
+.vela[data-acesa="false"] .vela-halo,
+.vela[data-acesa="false"] .vela-chama {
+  opacity: 0;
+}
+
+.vela:focus-visible {
+  outline: 2px solid var(--amarelo);
+  outline-offset: 3px;
+}
+
+/* While a sheet is held up to read, the desk and its candle fall back. */
+.mesa[data-pegada] .vela {
+  filter: brightness(0.55);
 }
 
 .botao {
@@ -519,7 +609,7 @@
 }
 
 .botao[data-variante="discreto"] {
-  min-height: 44px;
+  padding: 0 0.7em;
   border-color: transparent;
   background: transparent;
   font-size: 0.85rem;
@@ -576,8 +666,11 @@
     gap: 6px;
   }
   .mesa-topo {
-    flex-direction: column;
-    gap: 0.1em;
+    gap: 0.5em;
+  }
+  /* Keep the corner switches level with the title, clear of the tagline. */
+  .canto {
+    top: max(0px, env(safe-area-inset-top));
   }
 }
 

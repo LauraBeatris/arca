@@ -12,9 +12,11 @@ import {
 } from "react";
 import { usePathname } from "next/navigation";
 import type { PoemMeta } from "@/lib/poems";
+import { prefs, usePrefs } from "@/lib/prefs";
 import { jitterFor } from "@/lib/seed";
 import { formatDate, strings as t } from "@/lib/strings";
 import { DeskEngine, type View } from "./engine";
+import { DeskSound, SOUNDS, makeNoise, playRecipe, type SoundId } from "./sound";
 import "./desk.css";
 
 export type DeskPoem = Omit<PoemMeta, "sheetCount" | "source"> & {
@@ -48,6 +50,9 @@ function useMediaQuery(query: string): boolean {
  * Every poem is a real <article> with real text in reading order. Each
  * gesture (swipe aside, pick up, turn page, flip, put down) also has a
  * labelled button and a key, so nothing depends on dragging.
+ *
+ * Beside the pile stands a candle (a second, warm light that can be put out),
+ * and the paper makes quiet sounds that can be turned off.
  */
 export function Desk({ poems }: { poems: DeskPoem[] }) {
   const total = poems.length;
@@ -86,19 +91,33 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
   const current = poems[top];
   const sheetCount = current.sheets.length;
 
+  /* ----------------------------------------------------------------- sound */
+
+  const { sound: soundOn, candle: candleLit } = usePrefs();
+  const soundRef = useRef<DeskSound | null>(null);
+  // Sounds only play in answer to something the visitor just did.
+  const play = useCallback((id: SoundId) => {
+    if (!prefs.get().sound) return;
+    soundRef.current ??= new DeskSound();
+    soundRef.current.play(id);
+  }, []);
+  useEffect(() => () => soundRef.current?.dispose(), []);
+
   /* --------------------------------------------------------------- actions */
 
   const next = useCallback(() => {
     if (picked || top >= total - 1) return;
     setTop(top + 1);
     setMessage(t.poemPosition(poems[top + 1].title, top + 2, total));
-  }, [picked, top, total, poems]);
+    play("slide");
+  }, [picked, top, total, poems, play]);
 
   const previous = useCallback(() => {
     if (picked || top <= 0) return;
     setTop(top - 1);
     setMessage(t.poemPosition(poems[top - 1].title, top, total));
-  }, [picked, top, total, poems]);
+    play("slideBack");
+  }, [picked, top, total, poems, play]);
 
   // Picking a sheet up gives it its own URL. Next.js keeps `usePathname` in
   // sync with history.pushState, so this never leaves the page.
@@ -106,15 +125,17 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
     (index: number) => {
       if (picked && index === pickedIndex) return;
       window.history.pushState(null, "", poemPath(poems[index].slug));
+      play("lift");
     },
-    [picked, pickedIndex, poems],
+    [picked, pickedIndex, poems, play],
   );
 
   const putDown = useCallback(() => {
     if (!picked) return;
     window.history.pushState(null, "", "/");
     setMessage(t.putDownDone);
-  }, [picked]);
+    play("drop");
+  }, [picked, play]);
 
   const turn = useCallback(
     (delta: 1 | -1) => {
@@ -123,14 +144,29 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
       if (to === page) return;
       setSide({ slug: pickedSlug, page: to, flipped: false });
       setMessage(t.pagePosition(to + 1, sheetCount));
+      play(delta > 0 ? "page" : "pageBack");
     },
-    [picked, flipped, page, sheetCount, pickedSlug],
+    [picked, flipped, page, sheetCount, pickedSlug, play],
   );
 
   const flip = useCallback(() => {
     if (!picked) return;
     setSide({ slug: pickedSlug, page, flipped: !flipped });
-  }, [picked, pickedSlug, page, flipped]);
+    play("flip");
+  }, [picked, pickedSlug, page, flipped, play]);
+
+  const toggleCandle = useCallback(() => {
+    const lit = !prefs.get().candle;
+    prefs.set({ candle: lit });
+    play(lit ? "light" : "snuff");
+  }, [play]);
+
+  const toggleSound = useCallback(() => {
+    const on = !prefs.get().sound;
+    prefs.set({ sound: on });
+    // Turning sound on answers with a sound, so it is clear it worked.
+    if (on) play("lift");
+  }, [play]);
 
   /* ---------------------------------------------------------------- engine */
 
@@ -170,8 +206,12 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
     );
     engineRef.current = engine;
     if (process.env.NODE_ENV !== "production") {
-      // Handy in the console while developing: window.__arca
-      (window as unknown as { __arca?: DeskEngine }).__arca = engine;
+      // Handy in the console while developing: window.__arca, and the
+      // sound recipes for rendering them offline: window.__arcaSound
+      Object.assign(window, {
+        __arca: engine,
+        __arcaSound: { SOUNDS, makeNoise, playRecipe },
+      });
     }
     return () => {
       engine.destroy();
@@ -182,6 +222,10 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
   useEffect(() => {
     engineRef.current?.setView(view);
   }, [view]);
+
+  useEffect(() => {
+    engineRef.current?.setCandle(candleLit);
+  }, [candleLit, poems]);
 
   /* ----------------------------------------------------------------- focus */
 
@@ -455,8 +499,53 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
           )}
         </div>
 
+        {/* The candle is a real object on the desk and a real button: it
+            keeps flickering, so there has to be a way to put it out. */}
+        <button
+          type="button"
+          className="vela"
+          data-acesa={candleLit}
+          aria-label={candleLit ? t.candleOff : t.candleOn}
+          title={candleLit ? t.candleOff : t.candleOn}
+          onClick={toggleCandle}
+        >
+          <svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+            <defs>
+              <radialGradient id="vela-cera" cx="50%" cy="44%" r="58%">
+                <stop offset="0" stopColor="#fff6dd" />
+                <stop offset="0.5" stopColor="#f1e4c4" />
+                <stop offset="1" stopColor="#cdb98e" />
+              </radialGradient>
+              <radialGradient id="vela-poca" cx="50%" cy="45%" r="60%">
+                <stop offset="0" stopColor="#f6e6bd" />
+                <stop offset="1" stopColor="#dcc796" />
+              </radialGradient>
+              <radialGradient id="vela-halo">
+                <stop offset="0" stopColor="#ffd98a" stopOpacity="0.95" />
+                <stop offset="0.45" stopColor="#ffb14a" stopOpacity="0.45" />
+                <stop offset="1" stopColor="#ff9a2e" stopOpacity="0" />
+              </radialGradient>
+              <linearGradient id="vela-fogo" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stopColor="#ffb347" />
+                <stop offset="0.6" stopColor="#ffe9a8" />
+                <stop offset="1" stopColor="#fffaf0" />
+              </linearGradient>
+            </defs>
+            <circle className="vela-corpo" cx="50" cy="50" r="33" fill="url(#vela-cera)" />
+            <circle cx="50" cy="50" r="32.4" fill="none" stroke="#8a6c3c" strokeOpacity="0.35" strokeWidth="1.2" />
+            <circle cx="50" cy="51" r="14" fill="url(#vela-poca)" />
+            <circle className="vela-halo" cx="50" cy="48" r="30" fill="url(#vela-halo)" />
+            <path d="M50 51 V45.5" stroke="#2b1c10" strokeWidth="1.7" strokeLinecap="round" />
+            <path
+              className="vela-chama"
+              d="M50 29 C56.5 37.5 57 43 50 47.5 C43 43 43.5 37.5 50 29 Z"
+              fill="url(#vela-fogo)"
+            />
+          </svg>
+        </button>
+
         {canTilt && !reducedMotion && (
-          <div className="luz">
+          <div className="canto canto-esquerdo">
             <DeskButton
               quiet
               onPress={() => {
@@ -468,6 +557,12 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
             </DeskButton>
           </div>
         )}
+
+        <div className="canto canto-direito">
+          <DeskButton quiet onPress={toggleSound}>
+            {soundOn ? t.soundOff : t.soundOn}
+          </DeskButton>
+        </div>
 
         <p className="sr-only" role="status" aria-live="polite">
           {tilt === "denied" ? t.tiltDenied : message}

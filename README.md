@@ -28,6 +28,8 @@ this is a small one of my own: the poems i marked while reading *mensagem* and t
 - pick a sheet up and read it under the lamp
 - turn it over to see the date, the words i learned, and a short note
 - move the light with your mouse, your finger, or by tilting your phone
+- blow out the candle, or light it again
+- hear the paper as you move it (there is a switch to turn the sound off)
 
 every action also has a button and a key (arrows to move, `esc` to put a sheet down), so it works without dragging and with a screen reader.
 

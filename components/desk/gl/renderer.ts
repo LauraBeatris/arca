@@ -39,6 +39,8 @@ export type SheetQuad = {
   back: boolean;
   /** Draw a wide, soft contact shadow under this sheet as well. */
   ground: boolean;
+  /** 0..1: how much of the candle's light reaches this sheet. */
+  candle: number;
 };
 
 export type Frame = {
@@ -46,6 +48,9 @@ export type Frame = {
   height: number;
   light: [number, number, number];
   lampOn: number;
+  /** Candle flame position (world px) and brightness (0..1, flickering). */
+  candle: [number, number, number];
+  candleOn: number;
   deskDim: number;
   quads: SheetQuad[];
 };
@@ -282,6 +287,8 @@ export class PaperRenderer {
     gl.uniform3fv(du.uLight, frame.light);
     gl.uniform1f(du.uLampOn, frame.lampOn);
     gl.uniform1f(du.uFalloff, falloff);
+    gl.uniform3fv(du.uCandle, frame.candle);
+    gl.uniform1f(du.uCandleOn, frame.candleOn);
     this.bind(this.wood, du);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
@@ -392,6 +399,9 @@ export class PaperRenderer {
     gl.uniform3fv(u.uLight, frame.light);
     gl.uniform1f(u.uLampOn, frame.lampOn);
     gl.uniform1f(u.uFalloff, falloff);
+    gl.uniform3fv(u.uCandle, frame.candle);
+    gl.uniform1f(u.uCandleOn, frame.candleOn);
+    gl.uniform1f(u.uCandleK, quad.candle);
     this.bind(maps, u);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   }

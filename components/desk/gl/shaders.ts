@@ -168,7 +168,7 @@ void main() {
 }
 `;
 
-/** Dark wood, grain running left to right. Kept deliberately low in contrast. */
+/** Warm mid-toned wood, grain running left to right. Kept low in contrast. */
 export const BAKE_WOOD_FRAG = /* glsl */ `#version 300 es
 precision highp float;
 in vec2 vUv;
@@ -195,11 +195,11 @@ float heightAt(vec2 uv) {
 void main() {
   float e = uTexel;
   vec2 w = wood(vUv);
-  vec3 dark = vec3(0.070, 0.040, 0.026);
-  vec3 mid = vec3(0.185, 0.105, 0.062);
+  vec3 dark = vec3(0.300, 0.186, 0.102);
+  vec3 mid = vec3(0.455, 0.300, 0.166);
   vec3 alb = mix(dark, mid, smoothstep(0.1, 0.95, w.x));
   alb *= 0.9 + 0.2 * fbm(vUv * vec2(1.0, 3.0), vec2(1.0, 3.0), 31.0);
-  alb *= 1.0 - 0.45 * w.y;
+  alb *= 1.0 - 0.34 * w.y;
   float hx = heightAt(vUv + vec2(e, 0.0)) - heightAt(vUv - vec2(e, 0.0));
   float hy = heightAt(vUv + vec2(0.0, e)) - heightAt(vUv - vec2(0.0, e));
   vec2 slope = vec2(hx, hy) * (1.0 / (e * 2048.0)) * 2.0;
@@ -214,8 +214,22 @@ const LIGHT = /* glsl */ `
 uniform vec3 uLight;      // lamp position, world px
 uniform float uLampOn;    // 0..1, the lamp warming up
 uniform float uFalloff;   // px at which the lamp has halved
+uniform vec3 uCandle;     // candle flame position, world px
+uniform float uCandleOn;  // 0..1, flickers
 const vec3 AMBIENT = vec3(0.33, 0.35, 0.40);
 const vec3 LAMP = vec3(1.0, 0.925, 0.80);
+const vec3 CANDLE = vec3(1.0, 0.58, 0.24);
+// The candle is small, low and close: its light is warm, falls off fast and
+// rakes hard across whatever is next to it.
+vec3 candleLight(vec3 pos, vec3 n, vec3 nf, float gain) {
+  vec3 cv = uCandle - pos;
+  float cd = length(cv);
+  vec3 cl = cv / cd;
+  float att = 1.0 / (1.0 + (cd * cd) / (175.0 * 175.0));
+  float flatL = max(dot(nf, cl), 0.0);
+  float det = dot(n, cl) - dot(nf, cl);
+  return CANDLE * max(mix(0.75, flatL, 0.5) + det * gain, 0.0) * att * uCandleOn;
+}
 `;
 
 export const DESK_VERT = BAKE_VERT;
@@ -247,7 +261,8 @@ void main() {
   // A faint sheen from the varnish.
   vec3 hv = normalize(l + vec3(0.0, 0.0, 1.0));
   float spec = pow(max(dot(n, hv), 0.0), 18.0) * 0.045;
-  vec3 light = AMBIENT * 0.8 + LAMP * (diffuse * 1.15 + spec * 6.0) * att * uLampOn;
+  vec3 light = AMBIENT * 1.05 + LAMP * (diffuse * 0.92 + spec * 6.0) * att * uLampOn;
+  light += candleLight(vec3(px, 0.0), n, vec3(0.0, 0.0, 1.0), 1.1) * 0.95;
   vec3 col = alb * light * uDim;
   col += (hash12(gl_FragCoord.xy) - 0.5) / 255.0;
   o = vec4(col, 1.0);
@@ -291,6 +306,7 @@ uniform float uDeckle;
 uniform float uBevel;
 uniform float uAge;
 uniform float uSeed;
+uniform float uCandleK;   // how much candle light reaches this sheet
 uniform vec4 uCrease;     // x: y of a horizontal fold, y: its depth, z: x of a vertical fold, w: its depth
 ${LIGHT}
 out vec4 o;
@@ -332,6 +348,7 @@ void main() {
   float det = dot(N, l) - dot(Nf, l);
   float diffuse = max(mix(1.0, flatL, 0.5) + det * 1.7, 0.0);
   vec3 light = AMBIENT + LAMP * diffuse * att * uLampOn * 0.86;
+  light += candleLight(vWorld, N, Nf, 1.7) * uCandleK;
 
   // Age: paper yellows from the edges inwards.
   float tone = smoothstep(-80.0, 0.0, d);

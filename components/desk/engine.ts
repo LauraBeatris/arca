@@ -60,6 +60,8 @@ const REST_LIFT = 2;
 const DRAG_LIFT = 16;
 const PICKED_LIFT = 90;
 const PILE_DIM = 0.36;
+/** Height of the candle flame above the desk, in px. */
+const CANDLE_HEIGHT = 46;
 /** Where the clip grips the sheets, as fractions of the sheet size. */
 const CLIP_X = 0.13;
 
@@ -183,6 +185,14 @@ export class DeskEngine {
   private tilt: { beta: number; gamma: number } | null = null;
   private tilting = false;
 
+  private candleEl: HTMLElement | null = null;
+  private candleX = -9999;
+  private candleY = -9999;
+  private candleSize = 0;
+  /** 1 when the candle is lit, 0 when it has been put out. */
+  private candleGlow = new Spring(1, 60, 14, 0.002);
+  private lastDraw = 0;
+
   constructor(
     private root: HTMLElement,
     private canvas: HTMLCanvasElement,
@@ -218,7 +228,8 @@ export class DeskEngine {
         dim: new Spring(1, 120, 22, 0.002),
         fan: new Spring(1, 150, 24, 0.002),
         folds: sheetEls.map(() => new Spring(0, 85, 18.5, 0.0005)),
-        dir: i % 2 === 0 ? 1 : -1,
+        // Sheets set aside with a button leave by the left, away from the candle.
+        dir: -1,
         mats: [],
         base: [],
         onScreen: true,
@@ -226,6 +237,7 @@ export class DeskEngine {
       };
     });
 
+    this.candleEl = root.querySelector<HTMLElement>(".vela");
     this.measure();
     this.lampX.snap(this.restLamp()[0]);
     this.lampY.snap(this.restLamp()[1]);
@@ -303,6 +315,20 @@ export class DeskEngine {
       this.vh,
       Math.min(window.devicePixelRatio || 1, 2),
     );
+    // The candle is placed by CSS; the engine only needs to know where.
+    if (this.candleEl) {
+      const box = this.candleEl.getBoundingClientRect();
+      this.candleSize = box.width;
+      this.candleX = box.left - rect.left + box.width / 2;
+      this.candleY = box.top - rect.top + box.height / 2;
+    }
+  }
+
+  /** Lights the candle or puts it out. */
+  setCandle(lit: boolean) {
+    this.candleGlow.target = lit ? 1 : 0;
+    if (this.reduced) this.candleGlow.snap();
+    this.invalidate();
   }
 
   /** Works out where every sheet should be for the current view. */
@@ -375,6 +401,7 @@ export class DeskEngine {
       }
       active = this.lampX.step(dt / steps) || active;
       active = this.lampY.step(dt / steps) || active;
+      active = this.candleGlow.step(dt / steps) || active;
     }
 
     if (this.renderer && this.lampOn < 1) {
@@ -400,9 +427,28 @@ export class DeskEngine {
       active = true;
     }
 
-    this.draw();
-    if (active || this.drag) this.raf = requestAnimationFrame(this.frame);
+    // A lit candle keeps flickering, so the desk keeps drawing, but at a
+    // gentle rate when nothing else is moving.
+    const flickering =
+      !this.reduced && !!this.renderer && !!this.candleEl && this.candleGlow.x > 0.01;
+    const busy = active || !!this.drag;
+    if (busy || !flickering || now - this.lastDraw >= 40) {
+      this.draw();
+      this.lastDraw = now;
+    }
+    if (busy || flickering) this.raf = requestAnimationFrame(this.frame);
   };
+
+  /** How bright the flame is right now (0..1) and which way it leans (deg). */
+  private flame(): [number, number] {
+    if (this.reduced) return [0.94 * this.candleGlow.x, 0];
+    const t = performance.now() / 1000;
+    const level =
+      0.9 +
+      0.06 * Math.sin(t * 9.1) * Math.sin(t * 2.3) +
+      0.04 * Math.sin(t * 17.3 + 1.7 * Math.sin(t * 3.1));
+    return [level * this.candleGlow.x, 7 * Math.sin(t * 2.1) * Math.sin(t * 0.7 + 1)];
+  }
 
   /* ----------------------------------------------------------------- draw */
 
@@ -583,6 +629,28 @@ export class DeskEngine {
     const pile = this.root.querySelector<HTMLElement>(".pilha");
     if (pile) this.set(pile, "opacity", this.fade >= 1 ? "" : this.fade.toFixed(3));
 
+    // The candle is an HTML element above the pile. A sheet held up to read
+    // is nearer than the candle, so it hides the part of the candle behind it.
+    const [flame, lean] = this.flame();
+    if (this.candleEl) {
+      const held = this.poems[view.top];
+      const half = this.candleSize / 2;
+      this.set(this.candleEl, "--chama", flame.toFixed(3));
+      this.set(this.candleEl, "--vento", `${lean.toFixed(1)}deg`);
+      this.set(
+        this.candleEl,
+        "clipPath",
+        held && held.onScreen && held.lift.x > DRAG_LIFT + 4
+          ? this.occlude(
+              translate(this.candleX - half, this.candleY - half),
+              held.mats[this.frontSheet(held)].screen,
+              this.candleSize,
+              this.candleSize,
+            )
+          : "none",
+      );
+    }
+
     // Pass 3: paper.
     if (!this.renderer) return;
     const quads: SheetQuad[] = [];
@@ -615,6 +683,8 @@ export class DeskEngine {
           lift: k === 0 ? s.lift.x : 1.2 + Math.sin(m.fold * Math.PI) * 60,
           back: !m.front,
           ground,
+          // A sheet held up is above the flame, so the candle cannot light it.
+          candle: 1 - smooth(DRAG_LIFT + 2, 54, s.lift.x),
         });
       });
     }
@@ -624,6 +694,8 @@ export class DeskEngine {
       height: this.vh,
       light: lamp,
       lampOn: this.lampOn,
+      candle: [this.candleX, this.candleY, CANDLE_HEIGHT],
+      candleOn: flame * this.lampOn,
       deskDim: 0.55 + 0.45 * smooth(PILE_DIM, 1, deskDim),
       quads,
     });
@@ -703,7 +775,7 @@ export class DeskEngine {
   private onPointerDown = (e: PointerEvent) => {
     if (!this.tilting) this.pointLamp(e.clientX, e.clientY);
     if (e.pointerType === "mouse" && e.button !== 0) return;
-    if (!(e.target instanceof Element) || e.target.closest(".comandos, .mesa-topo")) return;
+    if (!(e.target instanceof Element) || e.target.closest("button, .comandos")) return;
     const top = this.topPoem();
     if (!top || this.pendingView) return;
     const onTop = this.isOnTopSheet(e.target);

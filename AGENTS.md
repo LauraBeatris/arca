@@ -27,11 +27,18 @@ Where things live:
 | `components/desk/Desk.tsx` | Structure, state, buttons, keys, focus |
 | `components/desk/engine.ts` | Springs, gestures, lamp, layout |
 | `components/desk/gl/` | Shaders and renderer |
+| `components/desk/sound.ts` | Sound effects: synthesised recipes, with a `src` slot for recordings |
+| `lib/prefs.ts` | What a visitor chose (sound on, candle lit), kept on their device |
 | `components/mdx.tsx` | Components available inside poems |
 
 One WebGL canvas draws the desk, every sheet and the shadows. The engine writes
 the same matrix to each HTML sheet and to its paper quad. The picked-up poem
 lives in the URL (`/poema/<slug>`) through `history.pushState`.
+
+Two lights: a lamp that follows the pointer, and a candle beside the pile. The
+candle is an HTML button placed by CSS (`.vela`); the engine reads its position
+and feeds it to the shaders as a second, flickering light. Because it never
+stops moving it must stay a button that can put it out.
 
 Rules that hold for every change:
 
