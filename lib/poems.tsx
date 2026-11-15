@@ -48,6 +48,8 @@ export type PoemMeta = {
 export type Poem = PoemMeta & {
   /** Rendered verse, one entry per sheet. */
   sheets: ReactNode[];
+  /** The verse as plain text, one entry per line, with the markup removed. */
+  lines: string[];
 };
 
 const POEMS_DIR = path.join(process.cwd(), "content", "poems");
@@ -108,6 +110,11 @@ function readPoem(file: string): Poem {
     reflection: String(data.reflection ?? ""),
     sheetCount: sheets.length,
     sheets,
+    lines: content
+      .replace(/<[^>]+>/g, "")
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line && !SHEET_BREAK.test(line)),
   };
 }
 

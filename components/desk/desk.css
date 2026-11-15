@@ -674,6 +674,170 @@
   }
 }
 
+/* --------------------------------------------------------- selection menu */
+
+/* A slip of cream card that floats over the verses the reader selected. */
+.menu-selecao {
+  --menu-tinta: #1b130c;
+  --menu-suave: rgb(27 19 12 / 0.62);
+  --menu-linha: rgb(60 40 20 / 0.14);
+  position: absolute;
+  z-index: 200;
+  width: max-content;
+  min-width: 220px;
+  max-width: min(340px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+  padding: 6px;
+  border: 1px solid rgb(60 40 20 / 0.12);
+  border-radius: 16px;
+  background: #f7f1e3;
+  color: var(--menu-tinta);
+  box-shadow:
+    0 1px 2px rgb(20 10 4 / 0.18),
+    0 10px 30px rgb(20 10 4 / 0.32),
+    0 24px 60px rgb(20 10 4 / 0.18);
+  font-size: 0.95rem;
+  -webkit-user-select: none;
+  user-select: none;
+  animation: menu-entra 0.16s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transform-origin: 50% 100%;
+}
+
+.menu-selecao[data-lado="below"] {
+  transform-origin: 50% 0;
+}
+
+@keyframes menu-entra {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.97);
+  }
+}
+
+.menu-selecao[data-lado="below"] {
+  animation-name: menu-entra-baixo;
+}
+
+@keyframes menu-entra-baixo {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.97);
+  }
+}
+
+.menu-acoes {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.menu-acoes button,
+.menu-acoes a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 14px 0 12px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background-color 0.12s ease;
+}
+
+.menu-acoes svg {
+  flex: none;
+  color: var(--menu-suave);
+}
+
+.menu-acoes [aria-disabled="true"] {
+  cursor: progress;
+  color: var(--menu-suave);
+}
+
+@media (hover: hover) {
+  .menu-acoes button:not([aria-disabled="true"]):hover,
+  .menu-acoes a:hover {
+    background: rgb(60 40 20 / 0.07);
+  }
+}
+
+.menu-acoes button:active,
+.menu-acoes a:active {
+  background: rgb(60 40 20 / 0.11);
+}
+
+.menu-selecao button:focus-visible,
+.menu-selecao a:focus-visible {
+  outline: 2px solid var(--cobalto);
+  outline-offset: -2px;
+}
+
+.menu-separador {
+  height: 1px;
+  margin: 5px 10px;
+  background: var(--menu-linha);
+}
+
+.menu-traducao:empty {
+  display: none;
+}
+
+.menu-traducao {
+  margin: 4px 0 0;
+  padding: 10px 14px 8px;
+  border-top: 1px solid var(--menu-linha);
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.menu-traducao h3 {
+  margin: 0 0 0.45em;
+  color: var(--menu-suave);
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.menu-traducao-texto {
+  margin: 0;
+  font-style: italic;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+.menu-nota,
+.menu-erro,
+.menu-aviso {
+  margin: 0.7em 0 0;
+  color: var(--menu-suave);
+  font-size: 0.8rem;
+}
+
+.menu-erro:first-child,
+.menu-aviso:first-child {
+  margin-top: 0;
+}
+
+.menu-ligacao {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--cobalto);
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
 /* ------------------------------------------------------------ preferences */
 
 @media (prefers-reduced-motion: reduce) {
@@ -682,6 +846,16 @@
   .verso-folha,
   .botao {
     transition: none;
+  }
+  .menu-selecao,
+  .menu-selecao[data-lado="below"] {
+    animation-name: menu-aparece;
+  }
+}
+
+@keyframes menu-aparece {
+  from {
+    opacity: 0;
   }
 }
 

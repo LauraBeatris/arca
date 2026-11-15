@@ -50,6 +50,28 @@ const pt = {
   candleOn: "Acender a vela",
   tiltDenied: "Sem acesso ao movimento do aparelho.",
 
+  // The menu that opens over selected verses (or from the "more" button).
+  moreActions: "Mais ações",
+  selectionMenu: "Ações para os versos escolhidos",
+  wholeSheetMenu: "Ações para esta folha",
+  translate: "Traduzir para inglês",
+  translating: "A traduzir…",
+  translationHeading: "Em inglês",
+  translationNote: "Tradução automática, não revista.",
+  translationUnavailable: "A tradução não está disponível agora.",
+  translationFailed: "Não foi possível traduzir. Tente outra vez.",
+  translationBusy: "Muitos pedidos de uma vez. Tente daqui a pouco.",
+  tryAgain: "Tentar outra vez",
+  listen: "Ouvir",
+  stopListening: "Parar de ouvir",
+  dictionary: (word: string) => `Procurar “${word}” no dicionário`,
+  dictionaryShort: "Dicionário",
+  share: "Partilhar",
+  shareCopied: "Versos e ligação copiados.",
+  shareFailed: "Não foi possível partilhar.",
+  shareQuote: (lines: string, title: string) =>
+    `“${lines}”\n— Fernando Pessoa, ${title}`,
+
   notFoundTitle: "Esta folha não está na arca.",
   notFoundBack: "Voltar à pilha",
 

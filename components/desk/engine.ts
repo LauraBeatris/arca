@@ -775,7 +775,7 @@ export class DeskEngine {
   private onPointerDown = (e: PointerEvent) => {
     if (!this.tilting) this.pointLamp(e.clientX, e.clientY);
     if (e.pointerType === "mouse" && e.button !== 0) return;
-    if (!(e.target instanceof Element) || e.target.closest("button, .comandos")) return;
+    if (!(e.target instanceof Element) || e.target.closest("button, .comandos, .menu-selecao")) return;
     const top = this.topPoem();
     if (!top || this.pendingView) return;
     const onTop = this.isOnTopSheet(e.target);

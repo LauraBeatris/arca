@@ -16,6 +16,7 @@ import { prefs, usePrefs } from "@/lib/prefs";
 import { jitterFor } from "@/lib/seed";
 import { formatDate, strings as t } from "@/lib/strings";
 import { DeskEngine, type View } from "./engine";
+import { SelectionMenu, type SelectionMenuHandle } from "./SelectionMenu";
 import { DeskSound, SOUNDS, makeNoise, playRecipe, type SoundId } from "./sound";
 import "./desk.css";
 
@@ -232,6 +233,13 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
   const headings = useRef(new Map<string, HTMLElement>());
   const backHeadings = useRef(new Map<string, HTMLElement>());
   const pickUpButton = useRef<HTMLButtonElement>(null);
+  const moreButton = useRef<HTMLButtonElement>(null);
+  const menu = useRef<SelectionMenuHandle>(null);
+  // The poem whose verses the selection menu acts on (the front of a held sheet).
+  const reading = useMemo(
+    () => (picked && !flipped ? { slug: current.slug, title: current.title } : null),
+    [picked, flipped, current.slug, current.title],
+  );
   const before = useRef({ pickedSlug, flipped });
 
   useEffect(() => {
@@ -490,6 +498,16 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
                 </div>
               )}
               <div className="comandos-grupo">
+                {!flipped && (
+                  <DeskButton
+                    ref={moreButton}
+                    onPress={() => {
+                      if (moreButton.current) menu.current?.toggleForSheet(moreButton.current);
+                    }}
+                  >
+                    {t.moreActions}
+                  </DeskButton>
+                )}
                 <DeskButton onPress={flip}>{flipped ? t.seeFront : t.seeBack}</DeskButton>
                 <DeskButton primary onPress={putDown}>
                   {t.putDown}
@@ -563,6 +581,13 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
             {soundOn ? t.soundOff : t.soundOn}
           </DeskButton>
         </div>
+
+        <SelectionMenu
+          ref={menu}
+          rootRef={rootRef}
+          poem={reading}
+          page={page}
+        />
 
         <p className="sr-only" role="status" aria-live="polite">
           {tilt === "denied" ? t.tiltDenied : message}
