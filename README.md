@@ -1,13 +1,50 @@
-# Arca
+<div align="center">
 
-A pile of loose sheets on a dark wood desk: the poems of Fernando Pessoa that
-Laura marked while reading the *Cancioneiro* and *Mensagem*. The name comes
-from the trunk (*arca*) of about 25,000 loose pages found when Pessoa died.
+# arca
 
-Each poem is a sheet of paper you can slide aside, pick up under the lamp, turn
-over, and put back. Long poems are several sheets held by a paper clip.
+fernando pessoa's poems, on loose paper, under a lamp
 
-## Run it
+[arca-khaki-one.vercel.app](https://arca-khaki-one.vercel.app)
+
+<br>
+
+<!-- placeholder: replace this line with a video or a screenshot -->
+
+`[ video coming soon ]`
+
+<br>
+
+</div>
+
+when fernando pessoa died, a trunk was found with about 25,000 loose pages inside. in portuguese, a trunk is an *arca*.
+
+this is a small one of my own: the poems i marked while reading *mensagem* and the *cancioneiro*.
+
+<br>
+
+## what you can do
+
+- slide the top sheet away to see the next one
+- pick a sheet up and read it under the lamp
+- turn it over to see the date, the words i learned, and a short note
+- move the light with your mouse, your finger, or by tilting your phone
+
+every action also has a button and a key (arrows to move, `esc` to put a sheet down), so it works without dragging and with a screen reader.
+
+<br>
+
+## the paper
+
+| book | paper |
+| --- | --- |
+| *mensagem* | cream card, ink pressed into the page |
+| *cancioneiro* | thin typewriter paper, uneven ink |
+
+the words are always real text. the paper is drawn under them with webgl.
+
+<br>
+
+## run it
 
 ```bash
 pnpm install
@@ -17,70 +54,36 @@ pnpm install
 pnpm dev
 ```
 
-## Add a poem
+<br>
 
-Create `content/poems/<slug>.mdx`. The file name becomes the URL
-(`/poema/<slug>`).
+## add a poem
+
+make a file in `content/poems/`. its name becomes the link: `isto.mdx` → `/poema/isto`.
 
 ```mdx
 ---
-title: Mar Português
-numeral: X                # optional: the poem's number in its book
-book: mensagem            # mensagem | cancioneiro
-paper: carta              # optional override: carta | maquina
-markedAt: "2026-11-09"    # the day you marked it; newest goes on top
-source: http://arquivopessoa.net/textos/2405
+title: Isto
+book: cancioneiro        # mensagem | cancioneiro
+markedAt: "2026-09-28"   # newest goes on top of the pile
 words:
-  - word: bojador
+  - word: enleio
     meaning: …
 reflection: …
 ---
 
-One stanza per paragraph,
+one stanza per paragraph,
 one line of verse per line.
 
 ---
 
-A line holding only three dashes starts a new sheet.
-Poems with several sheets are held by a clip.
+three dashes start a new sheet.
+long poems are held by a paper clip.
 ```
 
-Inside the text, `<Mark note="…">word</Mark>` marks a word with a margin note.
-In v1 it renders as plain text; the format is settled so later versions can
-draw it as ink.
+<br>
 
-Paper is chosen by book (`mensagem` → cream letterpress card, `cancioneiro` →
-thin typewriter paper) unless the poem sets `paper`.
+## made with
 
-## How it is built
+next.js · react · typescript · webgl · mdx
 
-- **Text is always real HTML.** Every poem is an `<article>` with a heading and
-  one `<span>` per line of verse, in reading order. Nothing is drawn into a
-  canvas, so selection, screen readers and (later) select-to-translate work.
-- **Paper is a WebGL layer under the text** (`components/desk/gl`). One canvas
-  draws the desk, every sheet and their shadows, lit by a lamp that follows the
-  pointer. The engine (`components/desk/engine.ts`) writes the same matrix to
-  each HTML sheet and to its paper quad.
-- **Paper stocks are materials** (`lib/papers.ts`): an albedo map and a relief
-  map. Today both are generated in the shader. To use scanned paper, set
-  `scan: { albedo, relief }` on a stock; lamp, shadows and per-sheet variation
-  stay as they are.
-- **Every gesture has a button and a key.** Swipe aside, pick up, turn page,
-  flip and put down all have labelled buttons; arrow keys move through the pile
-  and through pages; Escape puts a sheet down. With reduced motion, slides
-  become fades and the lamp stays still.
-- **Interface copy lives in `lib/strings.ts`** (Portuguese), ready for an
-  English dictionary beside it.
-
-| Path | What |
-| --- | --- |
-| `content/poems/` | The poems (MDX + frontmatter) |
-| `lib/poems.tsx` | Reads and validates poems |
-| `lib/papers.ts` | Paper stocks |
-| `lib/strings.ts` | All interface copy |
-| `components/desk/Desk.tsx` | Structure, state, buttons, keys, focus |
-| `components/desk/engine.ts` | Springs, gestures, lamp, layout |
-| `components/desk/gl/` | Shaders and renderer |
-| `components/mdx.tsx` | Components available inside poems |
-
-Poem texts follow the [Arquivo Pessoa](http://arquivopessoa.net) edition.
+poem texts from [arquivo pessoa](http://arquivopessoa.net).

@@ -10,7 +10,28 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## Arca
 
-Read `README.md` first: it explains the content model and how the desk is built.
+Poems are MDX files in `content/poems/` (see `README.md` and the comment at the
+top of `lib/poems.tsx` for the frontmatter). Optional fields the README leaves
+out: `numeral` (the poem's number in its book), `paper` (`carta` | `maquina`,
+overrides the book's paper), `source` (URL the text came from). Inside a poem,
+`<Mark note="…">word</Mark>` marks a word; in v1 it renders as plain text.
+
+Where things live:
+
+| Path | What |
+| --- | --- |
+| `content/poems/` | The poems (MDX + frontmatter) |
+| `lib/poems.tsx` | Reads and validates poems |
+| `lib/papers.ts` | Paper stocks (materials: albedo + relief, with a `scan` slot) |
+| `lib/strings.ts` | All interface copy |
+| `components/desk/Desk.tsx` | Structure, state, buttons, keys, focus |
+| `components/desk/engine.ts` | Springs, gestures, lamp, layout |
+| `components/desk/gl/` | Shaders and renderer |
+| `components/mdx.tsx` | Components available inside poems |
+
+One WebGL canvas draws the desk, every sheet and the shadows. The engine writes
+the same matrix to each HTML sheet and to its paper quad. The picked-up poem
+lives in the URL (`/poema/<slug>`) through `history.pushState`.
 
 Rules that hold for every change:
 
