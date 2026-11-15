@@ -101,7 +101,9 @@ export function SelectionMenu({
   const [target, setTarget] = useState<Target | null>(null);
   const [translation, setTranslation] = useState<Translation>({ status: "idle" });
   const [speaking, setSpeaking] = useState(false);
-  const [notice, setNotice] = useState("");
+  // What the share button says for a moment after it copied (or failed to).
+  const [shared, setShared] = useState<"idle" | "copied" | "failed">("idle");
+  const sharedTimer = useRef(0);
   const [place, setPlace] = useState<{ x: number; y: number; side: "above" | "below" } | null>(
     null,
   );
@@ -123,7 +125,8 @@ export function SelectionMenu({
     if (canSpeak()) window.speechSynthesis.cancel();
     setSpeaking(false);
     setTranslation({ status: "idle" });
-    setNotice("");
+    window.clearTimeout(sharedTimer.current);
+    setShared("idle");
     setPlace(null);
     setTarget(next);
   }, []);
@@ -258,7 +261,19 @@ export function SelectionMenu({
         return;
       }
       const card = cardRef.current;
-      if (!card?.contains(document.activeElement)) return;
+      if (!card) return;
+      // A letter runs the action it names, wherever focus is.
+      if (!e.altKey && !e.ctrlKey && !e.metaKey && e.key.length === 1) {
+        const action = card.querySelector<HTMLElement>(
+          `[data-atalho="${CSS.escape(e.key.toLowerCase())}"]`,
+        );
+        if (action) {
+          e.preventDefault();
+          action.click();
+          return;
+        }
+      }
+      if (!card.contains(document.activeElement)) return;
       if (e.key !== "ArrowDown" && e.key !== "ArrowUp") {
         // Left and right would otherwise turn the page under the card.
         if (e.key === "ArrowLeft" || e.key === "ArrowRight") e.preventDefault();
@@ -285,6 +300,7 @@ export function SelectionMenu({
 
   useEffect(
     () => () => {
+      window.clearTimeout(sharedTimer.current);
       request.current?.abort();
       if (canSpeak()) window.speechSynthesis.cancel();
     },
@@ -319,7 +335,7 @@ export function SelectionMenu({
     setPlace((was) =>
       was && was.x === x && was.y === y && was.side === side ? was : { x, y, side },
     );
-  }, [target, translation, notice, speaking]);
+  }, [target, translation, shared, speaking]);
 
   // Opened from the button, focus goes into the card. Opened over a
   // selection, it stays put so the reader can keep adjusting it.
@@ -406,10 +422,12 @@ export function SelectionMenu({
     }
     try {
       await navigator.clipboard.writeText(`${text}\n\n${url}`);
-      setNotice(t.shareCopied);
+      setShared("copied");
     } catch {
-      setNotice(t.shareFailed);
+      setShared("failed");
     }
+    window.clearTimeout(sharedTimer.current);
+    sharedTimer.current = window.setTimeout(() => setShared("idle"), 1800);
   };
 
   /* --------------------------------------------------------------- render */
@@ -443,17 +461,25 @@ export function SelectionMenu({
               type="button"
               onClick={translate}
               aria-disabled={translation.status === "loading" || undefined}
+              {...shortcut(t.shortcuts.translate)}
             >
               <IconTranslate />
               <span>{translation.status === "loading" ? t.translating : t.translate}</span>
+              <Key letter={t.shortcuts.translate} />
             </button>
           </li>
         )}
         {speakable && (
           <li>
-            <button type="button" onClick={listen} aria-pressed={speaking}>
+            <button
+              type="button"
+              onClick={listen}
+              aria-pressed={speaking}
+              {...shortcut(t.shortcuts.listen)}
+            >
               {speaking ? <IconStop /> : <IconListen />}
               <span>{speaking ? t.stopListening : t.listen}</span>
+              <Key letter={t.shortcuts.listen} />
             </button>
           </li>
         )}
@@ -464,18 +490,32 @@ export function SelectionMenu({
               target="_blank"
               rel="noopener noreferrer"
               aria-label={t.dictionary(word)}
+              {...shortcut(t.shortcuts.dictionary)}
             >
               <IconBook />
               <span>{t.dictionaryShort}</span>
+              <Key letter={t.shortcuts.dictionary} />
             </a>
           </li>
         )}
         <li className="menu-separador" aria-hidden="true" />
         <li>
-          <button type="button" onClick={share}>
-            <IconShare />
-            <span>{t.share}</span>
+          <button
+            type="button"
+            onClick={share}
+            data-estado={shared === "idle" ? undefined : shared}
+            {...shortcut(t.shortcuts.share)}
+          >
+            {shared === "copied" ? <IconCheck /> : <IconShare />}
+            <span>
+              {shared === "copied" ? t.shareCopied : shared === "failed" ? t.shareFailed : t.share}
+            </span>
+            <Key letter={t.shortcuts.share} />
           </button>
+          {/* The button's label changes quietly; this says it out loud. */}
+          <span className="sr-only" role="status">
+            {shared === "copied" ? t.shareCopiedLong : shared === "failed" ? t.shareFailed : ""}
+          </span>
         </li>
       </ul>
 
@@ -499,17 +539,33 @@ export function SelectionMenu({
             )}
           </p>
         )}
-        {notice && <p className="menu-aviso">{notice}</p>}
       </div>
     </div>
+  );
+}
+
+/* -------------------------------------------------------------- shortcuts */
+
+/** Marks an action as the one a letter runs, for the key handler and for screen readers. */
+const shortcut = (letter: string) => ({
+  "data-atalho": letter,
+  "aria-keyshortcuts": letter.toUpperCase(),
+});
+
+/** The letter shown at the end of a row. Screen readers get it from aria-keyshortcuts. */
+function Key({ letter }: { letter: string }) {
+  return (
+    <kbd className="menu-atalho" aria-hidden="true">
+      {letter}
+    </kbd>
   );
 }
 
 /* ------------------------------------------------------------------ icons */
 
 const iconProps = {
-  width: 20,
-  height: 20,
+  width: 17,
+  height: 17,
   viewBox: "0 0 24 24",
   fill: "none",
   stroke: "currentColor",
@@ -552,6 +608,14 @@ function IconBook() {
     <svg {...iconProps}>
       <path d="M12 6.5C10 5 7.5 4.5 4 4.8v13c3.5-.3 6 .2 8 1.7 2-1.5 4.5-2 8-1.7v-13c-3.5-.3-6 .2-8 1.7z" />
       <path d="M12 6.5v13" />
+    </svg>
+  );
+}
+
+function IconCheck() {
+  return (
+    <svg {...iconProps}>
+      <path d="M5 12.5l4.5 4.5L19 7.5" />
     </svg>
   );
 }

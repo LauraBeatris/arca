@@ -285,6 +285,13 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
           if (!now.picked) return;
           now.putDown();
           break;
+        case t.shortcuts.more:
+        case t.shortcuts.more.toUpperCase(): {
+          const more = moreButton.current;
+          if (!now.picked || !more) return;
+          menu.current?.toggleForSheet(more);
+          break;
+        }
         default:
           return;
       }
@@ -501,6 +508,7 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
                 {!flipped && (
                   <DeskButton
                     ref={moreButton}
+                    shortcut={t.shortcuts.more}
                     onPress={() => {
                       if (moreButton.current) menu.current?.toggleForSheet(moreButton.current);
                     }}
@@ -577,9 +585,31 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
         )}
 
         <div className="canto canto-direito">
-          <DeskButton quiet onPress={toggleSound}>
-            {soundOn ? t.soundOff : t.soundOn}
-          </DeskButton>
+          {/* A speaker whose waves fade out when it is muted. The name stays
+              "Som" and aria-pressed says whether it is on; the tooltip says
+              what pressing it will do. */}
+          <button
+            type="button"
+            className="botao"
+            data-variante="icone"
+            aria-label={t.sound}
+            aria-pressed={soundOn}
+            title={soundOn ? t.soundOff : t.soundOn}
+            onClick={toggleSound}
+          >
+            <svg
+              className="icone-som"
+              data-ligado={soundOn}
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <path className="som-corneta" d="M3.75 9.6h3.1L11.4 5.9v12.2L6.85 14.4h-3.1z" />
+              <path className="som-onda som-onda-1" d="M14.6 9.4a3.7 3.7 0 0 1 0 5.2" />
+              <path className="som-onda som-onda-2" d="M17.2 6.9a7.3 7.3 0 0 1 0 10.2" />
+              <path className="som-mudo" d="M15.4 10.1l3.8 3.8M19.2 10.1l-3.8 3.8" />
+            </svg>
+          </button>
         </div>
 
         <SelectionMenu
@@ -607,6 +637,7 @@ function DeskButton({
   disabled,
   primary,
   quiet,
+  shortcut,
   ref,
   children,
 }: {
@@ -614,6 +645,8 @@ function DeskButton({
   disabled?: boolean;
   primary?: boolean;
   quiet?: boolean;
+  /** A letter that also presses this button. */
+  shortcut?: string;
   ref?: React.Ref<HTMLButtonElement>;
   children: ReactNode;
 }) {
@@ -624,6 +657,7 @@ function DeskButton({
       className="botao"
       data-variante={primary ? "principal" : quiet ? "discreto" : undefined}
       aria-disabled={disabled || undefined}
+      aria-keyshortcuts={shortcut?.toUpperCase()}
       onClick={() => {
         if (!disabled) onPress();
       }}

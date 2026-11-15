@@ -44,6 +44,7 @@ const pt = {
 
   tiltOn: "Inclinar a luz",
   tiltOff: "Parar a luz",
+  sound: "Som",
   soundOff: "Silenciar",
   soundOn: "Ativar som",
   candleOff: "Apagar a vela",
@@ -67,10 +68,19 @@ const pt = {
   dictionary: (word: string) => `Procurar “${word}” no dicionário`,
   dictionaryShort: "Dicionário",
   share: "Partilhar",
-  shareCopied: "Versos e ligação copiados.",
-  shareFailed: "Não foi possível partilhar.",
+  shareCopied: "Copiado",
+  shareCopiedLong: "Versos e ligação copiados.",
+  shareFailed: "Não foi possível copiar",
   shareQuote: (lines: string, title: string) =>
     `“${lines}”\n— Fernando Pessoa, ${title}`,
+  // One key per action, taken from its name, so they change with the language.
+  shortcuts: {
+    more: "m",
+    translate: "t",
+    listen: "o",
+    dictionary: "d",
+    share: "p",
+  },
 
   notFoundTitle: "Esta folha não está na arca.",
   notFoundBack: "Voltar à pilha",
