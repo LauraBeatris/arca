@@ -36,6 +36,11 @@ type Rustle = {
   /** 0 = smooth hiss, 1 = dry crackle. */
   crackle?: number;
   attack?: number;
+  /**
+   * "swell" rises and fades (paper sliding). "hit" starts at once and dies
+   * away fast, with a finer, crisper grain (a page flapping over).
+   */
+  shape?: "swell" | "hit";
 };
 
 type Thump = {
@@ -93,41 +98,46 @@ export const SOUNDS: Record<SoundId, Sound> = {
       { kind: "rustle", at: 0.26, dur: 0.08, gain: 0.05, from: 2600, to: 1800, q: 0.9, crackle: 0.3, attack: 0.004 },
     ],
   },
-  // Turning a page at home is not one hiss. Fingers catch the sheet (a few
-  // clicks), it bends and crosses over (a soft breath of air with the sheet
-  // snapping as it buckles), then it settles on the others (a light pat).
+  // A book page turning is mostly not hiss (a long hiss sounds like sweeping
+  // a floor). It is a few dry clicks as the corner is caught and the page
+  // lifts, one crisp flap as it whips over and slaps down, then a couple of
+  // smaller taps as it settles.
   page: {
     recipe: [
-      { kind: "snaps", dur: 0.06, count: 4, gain: 0.09, from: 2600, to: 6200 },
-      { kind: "rustle", at: 0.03, dur: 0.33, gain: 0.04, from: 900, to: 2600, q: 0.5, crackle: 0.35, attack: 0.12 },
-      { kind: "rustle", at: 0.06, dur: 0.26, gain: 0.035, from: 3000, to: 6400, q: 0.7, crackle: 0.85, attack: 0.1 },
-      { kind: "snaps", at: 0.07, dur: 0.26, count: 10, gain: 0.085, from: 1800, to: 5400 },
-      { kind: "thump", at: 0.34, dur: 0.07, gain: 0.06, cutoff: 430 },
-      { kind: "rustle", at: 0.34, dur: 0.07, gain: 0.045, from: 3200, to: 1800, q: 0.9, crackle: 0.4, attack: 0.004 },
-      { kind: "snaps", at: 0.345, dur: 0.05, count: 3, gain: 0.055, from: 2000, to: 4200 },
+      { kind: "snaps", dur: 0.05, count: 3, gain: 0.05, from: 3200, to: 7000 },
+      { kind: "snaps", at: 0.05, dur: 0.13, count: 5, gain: 0.055, from: 1800, to: 4800 },
+      { kind: "rustle", at: 0.15, dur: 0.075, gain: 0.04, from: 1800, to: 5200, q: 0.7, crackle: 0.8, attack: 0.04 },
+      { kind: "rustle", shape: "hit", at: 0.225, dur: 0.075, gain: 0.11, from: 4800, to: 1300, q: 0.5, crackle: 0.85 },
+      { kind: "thump", at: 0.225, dur: 0.05, gain: 0.05, cutoff: 520 },
+      { kind: "rustle", shape: "hit", at: 0.285, dur: 0.03, gain: 0.05, from: 3600, to: 1800, q: 0.8, crackle: 0.6 },
+      { kind: "rustle", shape: "hit", at: 0.322, dur: 0.025, gain: 0.028, from: 3200, to: 1700, q: 0.8, crackle: 0.6 },
+      { kind: "snaps", at: 0.29, dur: 0.08, count: 3, gain: 0.04, from: 1800, to: 4000 },
     ],
   },
   pageBack: {
     recipe: [
-      { kind: "snaps", dur: 0.05, count: 3, gain: 0.08, from: 2200, to: 5200 },
-      { kind: "rustle", at: 0.02, dur: 0.31, gain: 0.04, from: 2400, to: 850, q: 0.5, crackle: 0.35, attack: 0.1 },
-      { kind: "rustle", at: 0.04, dur: 0.24, gain: 0.035, from: 6000, to: 2800, q: 0.7, crackle: 0.85, attack: 0.08 },
-      { kind: "snaps", at: 0.05, dur: 0.24, count: 9, gain: 0.085, from: 1700, to: 5000 },
-      { kind: "thump", at: 0.31, dur: 0.075, gain: 0.075, cutoff: 400 },
-      { kind: "rustle", at: 0.31, dur: 0.08, gain: 0.05, from: 3000, to: 1700, q: 0.9, crackle: 0.4, attack: 0.004 },
-      { kind: "snaps", at: 0.315, dur: 0.05, count: 3, gain: 0.06, from: 1900, to: 4000 },
+      { kind: "snaps", dur: 0.05, count: 3, gain: 0.05, from: 2800, to: 6400 },
+      { kind: "snaps", at: 0.05, dur: 0.12, count: 5, gain: 0.055, from: 1600, to: 4400 },
+      { kind: "rustle", at: 0.14, dur: 0.075, gain: 0.04, from: 1600, to: 4600, q: 0.7, crackle: 0.8, attack: 0.04 },
+      { kind: "rustle", shape: "hit", at: 0.215, dur: 0.08, gain: 0.105, from: 4200, to: 1150, q: 0.5, crackle: 0.85 },
+      { kind: "thump", at: 0.215, dur: 0.055, gain: 0.055, cutoff: 480 },
+      { kind: "rustle", shape: "hit", at: 0.28, dur: 0.03, gain: 0.05, from: 3200, to: 1600, q: 0.8, crackle: 0.6 },
+      { kind: "rustle", shape: "hit", at: 0.318, dur: 0.025, gain: 0.028, from: 2900, to: 1500, q: 0.8, crackle: 0.6 },
+      { kind: "snaps", at: 0.285, dur: 0.08, count: 3, gain: 0.04, from: 1600, to: 3600 },
     ],
   },
-  // Turning the whole sheet over: the same gesture, slower and a little deeper.
+  // Turning the whole sheet over: the same gesture with a bigger, looser
+  // sheet, so a little slower and deeper.
   flip: {
     recipe: [
-      { kind: "snaps", dur: 0.07, count: 4, gain: 0.08, from: 2200, to: 5200 },
-      { kind: "rustle", at: 0.04, dur: 0.41, gain: 0.042, from: 700, to: 2100, q: 0.5, crackle: 0.35, attack: 0.16 },
-      { kind: "rustle", at: 0.08, dur: 0.32, gain: 0.032, from: 2600, to: 5200, q: 0.7, crackle: 0.8, attack: 0.12 },
-      { kind: "snaps", at: 0.09, dur: 0.32, count: 11, gain: 0.08, from: 1500, to: 4600 },
-      { kind: "thump", at: 0.43, dur: 0.08, gain: 0.07, cutoff: 380 },
-      { kind: "rustle", at: 0.43, dur: 0.08, gain: 0.045, from: 2800, to: 1600, q: 0.9, crackle: 0.4, attack: 0.004 },
-      { kind: "snaps", at: 0.435, dur: 0.06, count: 3, gain: 0.055, from: 1800, to: 3800 },
+      { kind: "snaps", dur: 0.06, count: 3, gain: 0.05, from: 2600, to: 6000 },
+      { kind: "snaps", at: 0.06, dur: 0.18, count: 6, gain: 0.055, from: 1500, to: 4200 },
+      { kind: "rustle", at: 0.21, dur: 0.09, gain: 0.04, from: 1400, to: 4200, q: 0.7, crackle: 0.8, attack: 0.05 },
+      { kind: "rustle", shape: "hit", at: 0.3, dur: 0.09, gain: 0.105, from: 3800, to: 1000, q: 0.5, crackle: 0.85 },
+      { kind: "thump", at: 0.3, dur: 0.06, gain: 0.06, cutoff: 440 },
+      { kind: "rustle", shape: "hit", at: 0.375, dur: 0.035, gain: 0.05, from: 3000, to: 1500, q: 0.8, crackle: 0.6 },
+      { kind: "rustle", shape: "hit", at: 0.42, dur: 0.028, gain: 0.028, from: 2700, to: 1400, q: 0.8, crackle: 0.6 },
+      { kind: "snaps", at: 0.38, dur: 0.09, count: 3, gain: 0.04, from: 1500, to: 3400 },
     ],
   },
   light: {
@@ -212,15 +222,23 @@ export function playRecipe(
       highpass.type = "highpass";
       highpass.frequency.value = Math.min(700, Math.min(layer.from, layer.to) * 0.5);
 
-      const attack = Math.min((layer.attack ?? 0.03) * pace, dur * 0.5);
-      envelope.gain.linearRampToValueAtTime(layer.gain * 3, start + attack);
-      envelope.gain.setTargetAtTime(0, start + Math.max(attack, dur * 0.45), dur * 0.2);
+      const hit = layer.shape === "hit";
+      if (hit) {
+        // Fast in, then a short body before it is gone: a flap, not a tick.
+        envelope.gain.linearRampToValueAtTime(layer.gain * 3, start + 0.002);
+        envelope.gain.exponentialRampToValueAtTime(layer.gain * 0.09, end);
+        envelope.gain.linearRampToValueAtTime(0, end + 0.012);
+      } else {
+        const attack = Math.min((layer.attack ?? 0.03) * pace, dur * 0.5);
+        envelope.gain.linearRampToValueAtTime(layer.gain * 3, start + attack);
+        envelope.gain.setTargetAtTime(0, start + Math.max(attack, dur * 0.45), dur * 0.2);
+      }
 
       // Paper does not hiss evenly: its loudness jitters as fibres catch.
       const grain = ctx.createGain();
       const crackle = layer.crackle ?? 0;
       if (crackle > 0) {
-        const points = Math.max(4, Math.round(dur * 110));
+        const points = Math.max(4, Math.round(dur * (hit ? 420 : 110)));
         const curve = new Float32Array(points);
         for (let i = 0; i < points; i++) curve[i] = 1 - crackle * Math.random();
         grain.gain.setValueCurveAtTime(curve, start, dur);
