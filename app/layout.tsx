@@ -27,6 +27,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#3a2414",
+  // The desk is always dark: system controls and scrollbars match it.
+  colorScheme: "dark",
   viewportFit: "cover",
 };
 

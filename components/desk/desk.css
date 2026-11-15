@@ -192,6 +192,7 @@
 .mesa:not([data-pegada]) .poema[data-rank="topo"] .folha {
   cursor: grab;
   touch-action: none;
+  -webkit-touch-callout: none;
 }
 
 /* Picked up, it is something you read: the text can be selected. */
@@ -536,6 +537,10 @@
   background: none;
   cursor: pointer;
   touch-action: manipulation;
+  /* Holding the candle never selects or pops the system callout. */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
   --chama: 0.94;
   --vento: 0deg;
   transition:
@@ -630,6 +635,7 @@
   -webkit-user-select: none;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
   touch-action: manipulation;
   transition:
     color 0.15s ease,
@@ -792,6 +798,8 @@
   max-width: min(320px, calc(100vw - 24px));
   max-height: calc(100dvh - 24px);
   overflow-y: auto;
+  /* A long translation scrolls inside the card, never the desk behind it. */
+  overscroll-behavior: contain;
   padding: 4px;
   border: 1px solid rgb(60 40 20 / 0.12);
   border-radius: 12px;
@@ -858,6 +866,8 @@
   text-decoration: none;
   cursor: pointer;
   touch-action: manipulation;
+  /* "Look up" is a link: holding it should not open the link preview. */
+  -webkit-touch-callout: none;
   transition: background-color 0.12s ease;
 }
 
@@ -871,7 +881,7 @@
   color: var(--menu-suave);
 }
 
-@media (hover: hover) {
+@media (hover: hover) and (pointer: fine) {
   .menu-acoes button:not([aria-disabled="true"]):hover,
   .menu-acoes a:hover {
     background: rgb(60 40 20 / 0.07);
@@ -1016,6 +1026,7 @@
   text-decoration: underline;
   text-underline-offset: 0.2em;
   cursor: pointer;
+  touch-action: manipulation;
 }
 
 /* ------------------------------------------------------------ preferences */

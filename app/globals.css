@@ -27,6 +27,12 @@ body {
   text-size-adjust: 100%;
 }
 
+/* No double-tap zoom wait on anything you press. Zero specificity, so a
+   surface that owns its gestures (the pile's top sheet) still wins. */
+:where(a, button, [role="button"]) {
+  touch-action: manipulation;
+}
+
 body {
   font-family: var(--font-serif), "Iowan Old Style", "Palatino Linotype", Georgia, serif;
   -webkit-font-smoothing: antialiased;
