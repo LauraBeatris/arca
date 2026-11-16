@@ -4,7 +4,7 @@
 
 fernando pessoa's poems, on loose paper, under a lamp
 
-[arca-khaki-one.vercel.app](https://arca-khaki-one.vercel.app)
+[arcadepessoa.com](https://arcadepessoa.com)
 
 <br>
 
