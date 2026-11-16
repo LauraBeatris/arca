@@ -16,6 +16,7 @@ import { prefs, usePrefs } from "@/lib/prefs";
 import { jitterFor } from "@/lib/seed";
 import { formatDate, strings as t } from "@/lib/strings";
 import { DeskEngine, type View } from "./engine";
+import { Marca } from "./Marca";
 import { SelectionMenu, type SelectionMenuHandle } from "./SelectionMenu";
 import { DeskSound, SOUNDS, makeNoise, playRecipe, type SoundId } from "./sound";
 import "./desk.css";
@@ -314,7 +315,21 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
       <canvas className="mesa-papel" ref={canvasRef} aria-hidden="true" />
 
       <header className="mesa-topo">
-        <h1>{t.siteTitle}</h1>
+        <h1>
+          <Marca />
+          <span className="sr-only">{t.siteTitle}</span>
+          <span className="titulo" aria-hidden="true">
+            {Array.from(t.siteTitle).map((letter, i) => (
+              <span
+                key={i}
+                className="letra"
+                style={{ "--i": i } as CSSProperties}
+              >
+                {letter}
+              </span>
+            ))}
+          </span>
+        </h1>
         <p>{t.tagline}</p>
       </header>
 

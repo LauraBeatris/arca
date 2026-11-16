@@ -1,11 +1,24 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- The mark (components/desk/Marca.tsx) in its final pose, with heavier
+       lines and no straps so it still reads at 16px. -->
   <rect width="64" height="64" rx="12" fill="#1a0f09"/>
-  <g transform="rotate(-7 32 32)">
-    <rect x="18" y="12" width="30" height="42" rx="1.5" fill="#cfc4a8"/>
-  </g>
-  <g transform="rotate(4 32 32)">
-    <rect x="17" y="11" width="30" height="42" rx="1.5" fill="#efe6d2"/>
-    <path d="M23 22h18M23 28h14M23 34h17M23 40h11" stroke="#1c1814" stroke-width="2" stroke-linecap="round" opacity=".75"/>
-    <path d="M22 8v9" stroke="#a92b22" stroke-width="3" stroke-linecap="round"/>
+  <defs>
+    <clipPath id="dentro">
+      <rect x="0" y="-10" width="40" height="31.5"/>
+    </clipPath>
+  </defs>
+  <g transform="translate(0.9 0.6) scale(1.6)" stroke-linejoin="round">
+    <path transform="translate(0 -2.5) rotate(-7 4 21)" d="M4 21V17.5C4 13.6 10 12 20 12S36 13.6 36 17.5V21Z" fill="#3a2414" stroke="#efe6d2" stroke-width="1.7"/>
+    <g clip-path="url(#dentro)" stroke="#24160b" stroke-opacity=".55" stroke-width=".6">
+      <rect transform="rotate(-11 16.5 24)" x="11" y="9" width="11" height="15" rx=".6" fill="#cfc4a8"/>
+      <rect transform="rotate(10 23.5 23)" x="18" y="8" width="11" height="15" rx=".6" fill="#ddd3ba"/>
+      <g transform="rotate(-2 20 21.5)">
+        <rect x="14.5" y="6.5" width="11" height="15" rx=".6" fill="#efe6d2"/>
+        <path d="M17 10.5h6M17 13h4.5M17 15.5h5.5" stroke="#1c1814" stroke-opacity=".6" stroke-width="1" stroke-linecap="round"/>
+        <path d="M22.6 4.6v5.8" stroke="#a92b22" stroke-opacity="1" stroke-width="2.2"/>
+      </g>
+    </g>
+    <rect x="4" y="21" width="32" height="14.5" rx="1.2" fill="#3a2414" stroke="#efe6d2" stroke-width="1.7"/>
+    <path d="M18 21v2.6a2 2 0 0 0 4 0V21" fill="none" stroke="#efe6d2" stroke-width="1.6" stroke-linecap="round"/>
   </g>
 </svg>

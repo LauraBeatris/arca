@@ -87,6 +87,7 @@
 }
 
 .mesa-topo h1 {
+  position: relative;
   margin: 0;
   /* Letter-spacing adds a gap after the last letter; this re-centres it. */
   padding-left: 0.24em;
@@ -101,6 +102,171 @@
   font-size: 0.86rem;
   font-style: italic;
   opacity: 0.82;
+  animation: marca-surge 900ms ease 1000ms both;
+}
+
+/*
+ * The mark hangs to the left of the word, so the word itself stays centred
+ * over the tagline and the pile.
+ *
+ * It plays once, on first paint: the trunk draws itself (0–0.7s), fills,
+ * throws its lid back (0.7s), the sheets rise out of it one after another
+ * (0.85s) and the ribbon drops last (1.45s). The letters arrive meanwhile.
+ * Each rule below holds the final pose; the keyframes only say where from.
+ */
+.marca {
+  position: absolute;
+  right: 100%;
+  /* Sits on the word's baseline, like one more letter. */
+  bottom: 0.19em;
+  height: 1.45em;
+  margin-right: 0.04em;
+  aspect-ratio: 40 / 38;
+  overflow: visible;
+  filter: drop-shadow(0 1px 2px rgb(20 10 4 / 0.55));
+}
+
+.marca * {
+  transform-box: fill-box;
+}
+
+.marca-traco {
+  fill: #26160b;
+  stroke: var(--creme);
+  stroke-width: 1.1;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  animation:
+    marca-traca 700ms var(--ease-out) both,
+    marca-enche 450ms ease 500ms both;
+}
+
+.marca-tampa .marca-traco {
+  animation-delay: 120ms, 560ms;
+}
+
+.marca-detalhe,
+.marca-fecho {
+  fill: none;
+  stroke: var(--creme);
+  stroke-linecap: round;
+  animation: marca-surge 400ms ease 600ms both;
+}
+
+.marca-detalhe {
+  stroke-width: 0.8;
+  opacity: 0.45;
+}
+
+.marca-fecho {
+  stroke-width: 1.2;
+}
+
+/* Hinged at the back: from the front it rises and tips away. */
+.marca-tampa {
+  transform-origin: 0% 100%;
+  transform: translateY(-2.5px) rotate(-7deg);
+  animation: marca-abre 650ms cubic-bezier(0.3, 1.35, 0.55, 1) 700ms both;
+}
+
+.marca-folha {
+  transform-origin: 50% 100%;
+  animation: marca-sobe 750ms var(--ease-out) both;
+}
+
+.marca-folha rect {
+  stroke: rgb(36 22 11 / 0.55);
+  stroke-width: 0.5;
+}
+
+.marca-folha-1 {
+  transform: rotate(-11deg);
+  animation-delay: 850ms;
+}
+.marca-folha-1 rect {
+  fill: #cfc4a8;
+}
+
+.marca-folha-2 {
+  transform: rotate(10deg);
+  animation-delay: 940ms;
+}
+.marca-folha-2 rect {
+  fill: #ddd3ba;
+}
+
+.marca-folha-3 {
+  transform: rotate(-2deg);
+  animation-delay: 1030ms;
+}
+.marca-folha-3 rect {
+  fill: var(--creme);
+}
+
+.marca-linhas {
+  fill: none;
+  stroke: #1c1814;
+  stroke-width: 0.7;
+  stroke-linecap: round;
+  opacity: 0.55;
+}
+
+.marca-fita {
+  fill: none;
+  stroke: var(--lacre);
+  stroke-width: 1.7;
+  transform-origin: 50% 0%;
+  animation: marca-fita 380ms var(--ease-out) 1450ms both;
+}
+
+.letra {
+  display: inline-block;
+  animation: marca-letra 800ms var(--ease-out) both;
+  animation-delay: calc(250ms + var(--i) * 80ms);
+}
+
+@keyframes marca-traca {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+
+@keyframes marca-enche {
+  from {
+    fill-opacity: 0;
+  }
+}
+
+@keyframes marca-surge {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes marca-abre {
+  from {
+    transform: none;
+  }
+}
+
+@keyframes marca-sobe {
+  from {
+    transform: translateY(16px);
+  }
+}
+
+@keyframes marca-fita {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+@keyframes marca-letra {
+  from {
+    opacity: 0;
+    transform: translateY(0.35em);
+    filter: blur(4px);
+  }
 }
 
 /* A sheet held up to read covers the title, so the title steps back. */
@@ -114,6 +280,22 @@
   }
   .mesa-topo p {
     font-size: 0.78rem;
+  }
+}
+
+/*
+ * The narrowest phones have no room beside the word (the corner switches sit
+ * there), so the mark stands above it and the pile moves down to make room.
+ */
+@media (max-width: 379px) {
+  .mesa {
+    --topo: 94px;
+  }
+  .marca {
+    position: static;
+    display: block;
+    height: 1.5em;
+    margin: 0 auto 0.1em;
   }
 }
 
@@ -1063,6 +1245,14 @@
   }
   .menu-acoes [data-estado="copied"] .menu-icone {
     transition: opacity 200ms ease;
+  }
+  /* The mark and the title fade in already in place. */
+  .marca,
+  .letra {
+    animation: marca-surge 500ms ease both;
+  }
+  .marca * {
+    animation: none;
   }
 }
 
