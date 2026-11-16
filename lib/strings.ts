@@ -99,6 +99,11 @@ const pt = {
     `“${opening}” ${title}, de Fernando Pessoa (${book}).`,
   genre: "Poesia",
 
+  // The signature in the corner: a link to Laura's site. The name is read
+  // out to screen readers; on screen the signature says it.
+  builtBy: "built by",
+  builtByName: "Laura Beatris",
+
   // The switch to the other language, written in that language: it is for
   // the people who read it.
   otherLang: {
@@ -205,6 +210,9 @@ const en: Strings = {
   poemDescription: (opening, title, book) =>
     `“${opening}” ${title}, by Fernando Pessoa (${book}).`,
   genre: "Poetry",
+
+  builtBy: "built by",
+  builtByName: "Laura Beatris",
 
   otherLang: {
     lang: "pt",

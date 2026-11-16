@@ -25,6 +25,7 @@ import {
 } from "@/lib/lang";
 import { formatDate } from "@/lib/strings";
 import { DeskEngine, type View } from "./engine";
+import { Assinatura } from "./Assinatura";
 import { Marca } from "./Marca";
 import { SelectionMenu, type SelectionMenuHandle } from "./SelectionMenu";
 import { DeskSound, SOUNDS, makeNoise, playRecipe, type SoundId } from "./sound";
@@ -653,6 +654,8 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
             </svg>
           </button>
         </div>
+
+        <Assinatura />
 
         <SelectionMenu
           ref={menu}

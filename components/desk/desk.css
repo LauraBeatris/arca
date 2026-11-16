@@ -707,6 +707,133 @@
   right: max(6px, env(safe-area-inset-right));
 }
 
+/* -------------------------------------------------------------- signature */
+
+/* "built by" and Laura's signature, signed in the lower right corner like a
+   painting, level with the buttons. It writes itself once the title has
+   arrived (the strokes keep the pen's own timing, offset by --atraso). */
+.assinatura {
+  position: absolute;
+  z-index: 100;
+  right: max(14px, env(safe-area-inset-right));
+  bottom: max(20px, env(safe-area-inset-bottom));
+  display: flex;
+  align-items: center;
+  gap: 0.45em;
+  min-height: 48px;
+  padding: 0 4px;
+  border-radius: 6px;
+  color: var(--creme);
+  font-size: 0.78rem;
+  font-style: italic;
+  letter-spacing: 0.015em;
+  text-decoration: none;
+  text-shadow: 0 1px 2px rgb(10 6 3 / 0.55);
+  opacity: 0.74;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  transition:
+    opacity 0.4s ease,
+    visibility 0s linear 0s;
+}
+
+.assinatura:focus-visible {
+  outline: 2px solid var(--amarelo);
+  outline-offset: 2px;
+  opacity: 1;
+}
+
+.assinatura-texto {
+  animation: marca-surge 700ms ease 1600ms both;
+}
+
+.assinatura-traco {
+  width: 4.2em;
+  aspect-ratio: 257.1 / 145.5;
+  overflow: visible;
+  filter: drop-shadow(0 1px 1.5px rgb(10 6 3 / 0.55));
+}
+
+.assinatura-traco path {
+  fill: none;
+  stroke: currentColor;
+  /* About 1.3px at this size. */
+  stroke-width: 6.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1 2;
+  /* Duration and easing come from each stroke. */
+  animation-name: assinatura-escreve;
+  animation-delay: calc(1900ms + var(--atraso, 0ms));
+  animation-fill-mode: both;
+}
+
+@keyframes assinatura-escreve {
+  from {
+    /* Just past 1 so round caps don't leave a dot before the pen lands. */
+    stroke-dashoffset: 1.001;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* The face blinks while the pointer rests on the signature. */
+.assinatura-olho {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* The rotates squash each eye along the face's 33deg tilt, not the page's. */
+@keyframes assinatura-pisca {
+  0%,
+  7%,
+  100% {
+    transform: rotate(-33deg) scaleY(1) rotate(33deg);
+  }
+  2.5% {
+    transform: rotate(-33deg) scaleY(0.2) rotate(33deg);
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .assinatura:hover {
+    opacity: 1;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .assinatura:hover .assinatura-olho {
+    animation: assinatura-pisca 3.2s var(--ease-out) infinite;
+  }
+}
+
+/* A sheet held up to read: the signature steps back with the title, and
+   leaves the tab order once it has faded. */
+.mesa[data-pegada] .assinatura {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.4s ease,
+    visibility 0s linear 0.4s;
+}
+
+/* On phones it sits beside "Ler de perto": "built by" over the signature,
+   so it fits beside the button on the narrowest screens. */
+@media (max-width: 639px) {
+  .assinatura {
+    right: max(10px, env(safe-area-inset-right));
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 0;
+    font-size: 0.72rem;
+  }
+  .assinatura-traco {
+    width: 4em;
+  }
+}
+
 /* ----------------------------------------------------------------- candle */
 
 /* Placed here by CSS alone; the engine reads the position to know where the
@@ -1232,6 +1359,13 @@
 /* ------------------------------------------------------------ preferences */
 
 @media (prefers-reduced-motion: reduce) {
+  /* The signature is already written; it fades in with its words. */
+  .assinatura-traco path {
+    animation: none;
+  }
+  .assinatura-traco {
+    animation: marca-surge 700ms ease 1600ms both;
+  }
   .mesa-papel,
   .folha,
   .verso-folha,
