@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { checkRateLimit } from "@vercel/firewall";
 import { getVercelOidcToken } from "@vercel/oidc";
 import { getPoem, type Poem } from "@/lib/poems";
 
@@ -16,10 +17,13 @@ import { getPoem, type Poem } from "@/lib/poems";
  * - Identical requests already in flight share one model call.
  * - Model calls are limited per visitor, per instance per hour, and in how many
  *   run at once. Over a limit the route answers 429 and the menu says "busy".
- *   These limits live in memory, so each server instance counts on its own:
- *   they cap what one instance can spend, not the whole deployment. A Vercel
- *   Firewall rate limit on this path and an AI Gateway spend limit are the
- *   shared caps.
+ *   These limits live in memory, so each server instance counts on its own.
+ * - The shared caps live in the Vercel Firewall: a per-IP rule on POST
+ *   /api/traduzir, and the `traduzir-global` rule checked below with a single
+ *   key, so every model call on every instance counts against one site-wide
+ *   bucket. If that check can't be made (local runs, a Firewall hiccup, the
+ *   rule missing) the route carries on under the limits above. An AI Gateway
+ *   budget on the project is the final spend cap.
  *
  * Claude is reached through Vercel AI Gateway. On Vercel each request is
  * signed with the deployment's OIDC token, so the project holds no API key.
@@ -156,6 +160,31 @@ function clientWindow(ip: string, now: number): Window | null {
   window = { count: 0, resetAt: 0 };
   clients.set(ip, window);
   return window;
+}
+
+/** The Firewall rule that caps model calls for the whole site, all visitors. */
+const SITE_WIDE_LIMIT_ID = "traduzir-global";
+
+/**
+ * True when the site-wide bucket in the Vercel Firewall is full. One fixed
+ * key puts every caller in the same bucket. Off Vercel the SDK skips the check;
+ * if the Firewall can't answer, the in-memory limits still apply.
+ */
+async function siteWideLimitReached(request: Request): Promise<boolean> {
+  try {
+    const { rateLimited, error } = await checkRateLimit(SITE_WIDE_LIMIT_ID, {
+      request,
+      rateLimitKey: "all",
+      timeout: 1000,
+    });
+    if (error === "not-found") {
+      console.warn(`traduzir: Firewall rule '${SITE_WIDE_LIMIT_ID}' is missing`);
+    }
+    return rateLimited;
+  } catch (error) {
+    console.error("traduzir: site-wide rate limit check failed", error);
+    return false;
+  }
 }
 
 /** Vercel sets x-forwarded-for to the visitor's address and drops any sent. */
@@ -303,6 +332,7 @@ export async function POST(request: Request) {
   if (!take(instance, PER_INSTANCE.limit, PER_INSTANCE.windowMs, now)) {
     return busy(instance.resetAt - now);
   }
+  if (await siteWideLimitReached(request)) return busy(60_000);
 
   inFlight += 1;
   const call = translate(poem, selection, apiKey).finally(() => {
