@@ -31,6 +31,8 @@ Where things live:
 | `components/desk/sound.ts` | Sound effects: synthesised recipes, with a `src` slot for recordings |
 | `lib/prefs.ts` | What a visitor chose (sound on, candle lit), kept on their device |
 | `components/mdx.tsx` | Components available inside poems |
+| `lib/og.ts` | Link previews: `og:video` + `og:image` per page and language |
+| `scripts/og-video.mjs` | Records those previews from the real desk (`pnpm og`, against `pnpm start --port 3211`); rerun after adding a poem or changing the desk's look |
 
 One WebGL canvas draws the desk, every sheet and the shadows. The engine writes
 the same matrix to each HTML sheet and to its paper quad. The picked-up poem

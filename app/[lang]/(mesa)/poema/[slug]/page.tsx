@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { JsonLd } from "@/components/JsonLd";
 import { DEFAULT_LANG, isLang, poemPath } from "@/lib/lang";
+import { linkPreview } from "@/lib/og";
 import { getPoem, getPoems, type Poem } from "@/lib/poems";
 import { absoluteUrl, languageAlternates, pessoaJsonLd } from "@/lib/site";
 import { getStrings } from "@/lib/strings";
@@ -23,13 +24,22 @@ export async function generateMetadata({
   if (!poem) return {};
   const lang = isLang(param) ? param : DEFAULT_LANG;
   const t = getStrings(lang);
+  const title = t.pageTitle(poem.title);
+  const description = t.poemDescription(opening(poem), poem.title, t.bookName[poem.book]);
   return {
-    title: t.pageTitle(poem.title),
-    description: t.poemDescription(opening(poem), poem.title, t.bookName[poem.book]),
+    title,
+    description,
     alternates: {
       canonical: poemPath(lang, poem.slug),
       languages: languageAlternates((l) => poemPath(l, poem.slug)),
     },
+    ...linkPreview({
+      lang,
+      url: poemPath(lang, poem.slug),
+      title,
+      description,
+      poem: { slug: poem.slug, title: poem.title },
+    }),
   };
 }
 

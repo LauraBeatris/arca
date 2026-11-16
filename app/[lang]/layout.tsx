@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Libre_Caslon_Text, Special_Elite } from "next/font/google";
 import { LinguaProvider } from "@/components/Lingua";
 import { DEFAULT_LANG, LANGS, homePath, isLang } from "@/lib/lang";
+import { linkPreview } from "@/lib/og";
 import { languageAlternates, siteUrl } from "@/lib/site";
 import { getStrings } from "@/lib/strings";
 import "../globals.css";
@@ -43,6 +44,12 @@ export async function generateMetadata({
       canonical: homePath(lang),
       languages: languageAlternates(homePath),
     },
+    ...linkPreview({
+      lang,
+      url: homePath(lang),
+      title: t.homeTitle,
+      description: t.description,
+    }),
   };
 }
 

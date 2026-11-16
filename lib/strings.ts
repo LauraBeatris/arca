@@ -97,6 +97,11 @@ const pt = {
   pageTitle: (title: string) => `${title} · Fernando Pessoa · Arca`,
   poemDescription: (opening: string, title: string, book: string) =>
     `“${opening}” ${title}, de Fernando Pessoa (${book}).`,
+  // Link previews (the image and video shown when a link is shared).
+  previewAlt:
+    "Folhas soltas com poemas de Fernando Pessoa numa mesa de madeira, à luz de um candeeiro e de uma vela.",
+  poemPreviewAlt: (title: string) =>
+    `${title}, de Fernando Pessoa, numa folha levantada da pilha à luz de um candeeiro.`,
   genre: "Poesia",
 
   // The signature in the corner: a link to Laura's site. The name is read
@@ -210,6 +215,10 @@ const en: Strings = {
   pageTitle: (title) => `${title} · Fernando Pessoa · Arca`,
   poemDescription: (opening, title, book) =>
     `“${opening}” ${title}, by Fernando Pessoa (${book}).`,
+  previewAlt:
+    "Loose sheets of Fernando Pessoa’s poems on a wooden desk, lit by a lamp and a candle.",
+  poemPreviewAlt: (title) =>
+    `${title} by Fernando Pessoa, on a sheet lifted from the pile under a lamp.`,
   genre: "Poetry",
 
   builtBy: "built by",
