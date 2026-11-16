@@ -699,6 +699,10 @@
   position: absolute;
   z-index: 100;
   top: max(6px, env(safe-area-inset-top));
+  /* A row centred on one line, so a text button ("PT") and an icon button
+     sit level instead of sharing a text baseline. */
+  display: flex;
+  align-items: center;
 }
 
 .canto-esquerdo {
