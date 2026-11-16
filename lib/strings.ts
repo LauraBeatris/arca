@@ -1,12 +1,17 @@
+import type { Lang } from "@/lib/lang";
+
 /**
- * Every piece of interface copy lives here, so an English dictionary can be
- * added next to `pt` later and switched with a toggle.
+ * Every piece of interface copy lives here, one dictionary per language.
+ * Server code picks one with `getStrings(lang)`; client components read the
+ * page's with `useStrings()` from `components/Lingua.tsx`.
  *
- * Poem text is content, not interface copy, and stays in `content/poems`.
+ * Poem text is content, not interface copy, and stays in `content/poems`, in
+ * Portuguese, whatever the interface language.
  */
 
 const pt = {
   lang: "pt",
+  locale: "pt-PT",
   siteTitle: "Arca",
   tagline: "Poemas de Fernando Pessoa, marcados ao ler.",
   description:
@@ -67,6 +72,8 @@ const pt = {
   stopListening: "Parar de ouvir",
   dictionary: (word: string) => `Procurar “${word}” no dicionário`,
   dictionaryShort: "Dicionário",
+  dictionaryUrl: (word: string) =>
+    `https://dicionario.priberam.org/${encodeURIComponent(word.toLocaleLowerCase("pt"))}`,
   share: "Partilhar",
   shareCopied: "Copiado",
   shareCopiedLong: "Versos e ligação copiados.",
@@ -86,21 +93,138 @@ const pt = {
   notFoundBack: "Voltar à pilha",
 
   pageTitle: (title: string) => `${title} · Arca`,
-} as const;
 
-export type Strings = typeof pt;
+  // The switch to the other language, written in that language: it is for
+  // the people who read it.
+  otherLang: {
+    lang: "en",
+    short: "EN",
+    name: "English",
+    hint: "Read the site in English",
+  },
+  /** A line under the tagline for readers who may not read Portuguese. */
+  readingHint: "",
+};
 
-/** The active dictionary. An English toggle will pick between dictionaries here. */
-export const strings: Strings = pt;
+/** The same shape with every piece of copy widened to a plain string. */
+type Widen<T> = T extends string
+  ? string
+  : T extends (...args: infer A) => infer R
+    ? (...args: A) => Widen<R>
+    : { [K in keyof T]: Widen<T[K]> };
 
-const dateFormat = new Intl.DateTimeFormat("pt-PT", {
-  day: "numeric",
-  month: "long",
-  year: "numeric",
-  timeZone: "UTC",
-});
+export type Strings = Widen<typeof pt>;
 
-/** "2026-11-09" → "9 de novembro de 2026" */
-export function formatDate(iso: string): string {
-  return dateFormat.format(new Date(`${iso}T00:00:00Z`));
+const en: Strings = {
+  lang: "en",
+  locale: "en-US",
+  siteTitle: "Arca",
+  tagline: "Poems by Fernando Pessoa, marked while reading.",
+  description:
+    "A pile of loose sheets: the poems by Fernando Pessoa I’ve been marking in the Cancioneiro and in Mensagem.",
+  author: "Fernando Pessoa",
+
+  pileLabel: "Pile of poems, from the most recently marked to the oldest",
+  controlsLabel: "Desk controls",
+  poemCount: (current, total) => `Poem ${current} of ${total}`,
+  poemPosition: (title, current, total) =>
+    `${title}. Poem ${current} of ${total}.`,
+
+  previousPoem: "Previous poem",
+  nextPoem: "Next poem",
+  pickUp: "Read up close",
+  putDown: "Back to the pile",
+  putDownDone: "Sheet returned to the pile.",
+  seeBack: "See the back",
+  seeFront: "See the front",
+  previousPage: "Previous page",
+  nextPage: "Next page",
+  pagePosition: (current, total) => `Page ${current} of ${total}`,
+  pageShort: (current, total) => `${current} / ${total}`,
+
+  markedOn: "Marked on",
+  backPrefix: "Back of the sheet:",
+  wordsHeading: "Words I learned",
+  reflectionHeading: "Reflection",
+  // Book titles stay as Pessoa named them.
+  bookName: {
+    mensagem: "Mensagem",
+    cancioneiro: "Cancioneiro",
+  },
+
+  tiltOn: "Tilt the light",
+  tiltOff: "Stop the light",
+  sound: "Sound",
+  soundOff: "Mute",
+  soundOn: "Turn sound on",
+  candleOff: "Put out the candle",
+  candleOn: "Light the candle",
+  tiltDenied: "No access to the device’s motion.",
+
+  moreActions: "More actions",
+  selectionMenu: "Actions for the chosen lines",
+  wholeSheetMenu: "Actions for this sheet",
+  translate: "Translate",
+  translating: "Translating…",
+  translationHeading: "In English",
+  translationNote: "Machine translation, not reviewed.",
+  translationUnavailable: "Translation isn’t available right now.",
+  translationFailed: "Couldn’t translate. Try again.",
+  translationBusy: "Too many requests at once. Try again in a moment.",
+  tryAgain: "Try again",
+  listen: "Listen",
+  stopListening: "Stop listening",
+  dictionary: (word) => `Look up “${word}” in Wiktionary`,
+  dictionaryShort: "Dictionary",
+  // A Portuguese word explained in English.
+  dictionaryUrl: (word) =>
+    `https://en.wiktionary.org/wiki/${encodeURIComponent(word.toLocaleLowerCase("pt"))}#Portuguese`,
+  share: "Share",
+  shareCopied: "Copied",
+  shareCopiedLong: "Lines and link copied.",
+  shareFailed: "Couldn’t copy",
+  shareQuote: (lines, title) => `“${lines}”\n— Fernando Pessoa, ${title}`,
+  shortcuts: {
+    more: "m",
+    translate: "t",
+    listen: "l",
+    dictionary: "d",
+    share: "s",
+  },
+
+  notFoundTitle: "This sheet isn’t in the Arca.",
+  notFoundBack: "Back to the pile",
+
+  pageTitle: (title) => `${title} · Arca`,
+
+  otherLang: {
+    lang: "pt",
+    short: "PT",
+    name: "Português",
+    hint: "Ler o site em português",
+  },
+  readingHint: "Select any lines to read them in English.",
+};
+
+const dictionaries: Record<Lang, Strings> = { pt, en };
+
+export function getStrings(lang: Lang): Strings {
+  return dictionaries[lang];
+}
+
+const dateFormats = new Map<string, Intl.DateTimeFormat>();
+
+/** "2026-11-09" → "9 de novembro de 2026" (pt) or "November 9, 2026" (en) */
+export function formatDate(iso: string, t: Strings): string {
+  let format = dateFormats.get(t.locale);
+  if (!format) {
+    format = new Intl.DateTimeFormat(t.locale, {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      timeZone: "UTC",
+    });
+    dateFormats.set(t.locale, format);
+  }
+  return format.format(new Date(`${iso}T00:00:00Z`));
 }

@@ -14,7 +14,16 @@ import { usePathname } from "next/navigation";
 import type { PoemMeta } from "@/lib/poems";
 import { prefs, usePrefs } from "@/lib/prefs";
 import { jitterFor } from "@/lib/seed";
-import { formatDate, strings as t } from "@/lib/strings";
+import { useLang, useStrings } from "@/components/Lingua";
+import {
+  homePath,
+  poemPath,
+  rememberLang,
+  slugFromPath,
+  switchPath,
+  type Lang,
+} from "@/lib/lang";
+import { formatDate } from "@/lib/strings";
 import { DeskEngine, type View } from "./engine";
 import { Marca } from "./Marca";
 import { SelectionMenu, type SelectionMenuHandle } from "./SelectionMenu";
@@ -24,13 +33,6 @@ import "./desk.css";
 export type DeskPoem = Omit<PoemMeta, "sheetCount" | "source"> & {
   sheets: ReactNode[];
 };
-
-const poemPath = (slug: string) => `/poema/${slug}`;
-
-function slugFromPath(pathname: string): string | null {
-  const match = /^\/poema\/([^/]+)\/?$/.exec(pathname);
-  return match ? decodeURIComponent(match[1]) : null;
-}
 
 const noSubscription = () => () => {};
 
@@ -57,6 +59,9 @@ function useMediaQuery(query: string): boolean {
  * and the paper makes quiet sounds that can be turned off.
  */
 export function Desk({ poems }: { poems: DeskPoem[] }) {
+  const t = useStrings();
+  const lang = useLang();
+  const otherLang: Lang = lang === "en" ? "pt" : "en";
   const total = poems.length;
   const pathname = usePathname();
   const pickedIndex = poems.findIndex(
@@ -112,32 +117,32 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
     setTop(top + 1);
     setMessage(t.poemPosition(poems[top + 1].title, top + 2, total));
     play("slide");
-  }, [picked, top, total, poems, play]);
+  }, [picked, top, total, poems, play, t]);
 
   const previous = useCallback(() => {
     if (picked || top <= 0) return;
     setTop(top - 1);
     setMessage(t.poemPosition(poems[top - 1].title, top, total));
     play("slideBack");
-  }, [picked, top, total, poems, play]);
+  }, [picked, top, total, poems, play, t]);
 
   // Picking a sheet up gives it its own URL. Next.js keeps `usePathname` in
   // sync with history.pushState, so this never leaves the page.
   const pickUp = useCallback(
     (index: number) => {
       if (picked && index === pickedIndex) return;
-      window.history.pushState(null, "", poemPath(poems[index].slug));
+      window.history.pushState(null, "", poemPath(lang, poems[index].slug));
       play("lift");
     },
-    [picked, pickedIndex, poems, play],
+    [picked, pickedIndex, poems, play, lang],
   );
 
   const putDown = useCallback(() => {
     if (!picked) return;
-    window.history.pushState(null, "", "/");
+    window.history.pushState(null, "", homePath(lang));
     setMessage(t.putDownDone);
     play("drop");
-  }, [picked, play]);
+  }, [picked, play, lang, t]);
 
   const turn = useCallback(
     (delta: 1 | -1) => {
@@ -148,7 +153,7 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
       setMessage(t.pagePosition(to + 1, sheetCount));
       play(delta > 0 ? "page" : "pageBack");
     },
-    [picked, flipped, page, sheetCount, pickedSlug, play],
+    [picked, flipped, page, sheetCount, pickedSlug, play, t],
   );
 
   const flip = useCallback(() => {
@@ -258,7 +263,7 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
 
   useEffect(() => {
     document.title = picked ? t.pageTitle(current.title) : t.siteTitle;
-  }, [picked, current.title]);
+  }, [picked, current.title, t]);
 
   /* ------------------------------------------------------------------ keys */
 
@@ -301,7 +306,7 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [t.shortcuts.more]);
 
   /* ---------------------------------------------------------------- render */
 
@@ -331,6 +336,7 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
           </span>
         </h1>
         <p>{t.tagline}</p>
+        {t.readingHint && <p className="mesa-aviso-lingua">{t.readingHint}</p>}
       </header>
 
       <main>
@@ -344,6 +350,7 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
               <article
                 key={poem.slug}
                 className={`poema papel-${poem.paper}`}
+                lang="pt"
                 aria-labelledby={`titulo-${poem.slug}`}
                 data-rank={rank < 0 ? "fora" : rank === 0 ? "topo" : "baixo"}
                 data-pegado={isPicked || undefined}
@@ -382,7 +389,7 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
                               poem.title
                             ) : (
                               <a
-                                href={poemPath(poem.slug)}
+                                href={poemPath(lang, poem.slug)}
                                 tabIndex={rank === 0 ? 0 : -1}
                                 draggable={false}
                                 onClick={(event) => {
@@ -397,17 +404,18 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
                         </div>
                       )}
                       <div className="versos">{sheet}</div>
-                      <div className="rodape">
+                      {/* Interface copy inside the Portuguese sheet. */}
+                      <div className="rodape" lang={t.lang}>
                         {j === 0 && (
                           <>
                             <p className="marcado">
                               {t.markedOn}{" "}
                               <time dateTime={poem.markedAt}>
-                                {formatDate(poem.markedAt)}
+                                {formatDate(poem.markedAt, t)}
                               </time>
                             </p>
                             <p className="livro">
-                              {t.author}, <cite>{t.bookName[poem.book]}</cite>
+                              {t.author}, <cite lang="pt">{t.bookName[poem.book]}</cite>
                             </p>
                           </>
                         )}
@@ -438,14 +446,16 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
                         else backHeadings.current.delete(poem.slug);
                       }}
                     >
-                      <span className="sr-only">{t.backPrefix} </span>
+                      <span className="sr-only" lang={t.lang}>
+                        {t.backPrefix}{" "}
+                      </span>
                       {poem.title}
                     </h3>
-                    <p className="verso-data">
+                    <p className="verso-data" lang={t.lang}>
                       {t.markedOn}{" "}
-                      <time dateTime={poem.markedAt}>{formatDate(poem.markedAt)}</time>
+                      <time dateTime={poem.markedAt}>{formatDate(poem.markedAt, t)}</time>
                     </p>
-                    <h4>{t.wordsHeading}</h4>
+                    <h4 lang={t.lang}>{t.wordsHeading}</h4>
                     <dl className="palavras">
                       {poem.words.map((entry, k) => (
                         <div key={k}>
@@ -454,7 +464,7 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
                         </div>
                       ))}
                     </dl>
-                    <h4>{t.reflectionHeading}</h4>
+                    <h4 lang={t.lang}>{t.reflectionHeading}</h4>
                     <p className="reflexao">{poem.reflection}</p>
                   </div>
                 </section>
@@ -603,6 +613,20 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
         )}
 
         <div className="canto canto-direito">
+          {/* The other language, named in that language. A real link, so it
+              works before JavaScript loads; the click remembers the choice. */}
+          <a
+            className="botao"
+            data-variante="lingua"
+            href={switchPath(pathname, otherLang)}
+            hrefLang={t.otherLang.lang}
+            lang={t.otherLang.lang}
+            aria-label={t.otherLang.name}
+            title={t.otherLang.hint}
+            onClick={() => rememberLang(otherLang)}
+          >
+            {t.otherLang.short}
+          </a>
           {/* A speaker whose waves fade out when it is muted. The name stays
               "Som" and aria-pressed says whether it is on; the tooltip says
               what pressing it will do. */}

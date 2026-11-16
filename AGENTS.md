@@ -23,7 +23,8 @@ Where things live:
 | `content/poems/` | The poems (MDX + frontmatter) |
 | `lib/poems.tsx` | Reads and validates poems |
 | `lib/papers.ts` | Paper stocks (materials: albedo + relief, with a `scan` slot) |
-| `lib/strings.ts` | All interface copy |
+| `lib/strings.ts` | All interface copy, one dictionary per language (`pt`, `en`) |
+| `lib/lang.ts`, `proxy.ts` | Which language a URL is in, and picking it per request |
 | `components/desk/Desk.tsx` | Structure, state, buttons, keys, focus |
 | `components/desk/engine.ts` | Springs, gestures, lamp, layout |
 | `components/desk/gl/` | Shaders and renderer |
@@ -34,6 +35,13 @@ Where things live:
 One WebGL canvas draws the desk, every sheet and the shadows. The engine writes
 the same matrix to each HTML sheet and to its paper quad. The picked-up poem
 lives in the URL (`/poema/<slug>`) through `history.pushState`.
+
+The interface comes in Portuguese (plain URLs) and English (under `/en`). All
+routes live in `app/[lang]/`; `proxy.ts` rewrites plain URLs to `/pt/...` and
+sends visitors who chose English (cookie) or whose browser prefers it to
+`/en/...`. Only the interface changes: the poems and Laura's notes stay in
+Portuguese (marked `lang="pt"`), and English readers translate lines with the
+selection menu.
 
 Two lights: a lamp that follows the pointer, and a candle beside the pile. The
 candle is an HTML button placed by CSS (`.vela`); the engine reads its position
@@ -47,7 +55,9 @@ Rules that hold for every change:
 - Every gesture also needs a visible, labelled button with a large touch target
   and a keyboard path. Manage focus when a sheet is picked up, flipped or put
   down. Honour `prefers-reduced-motion` (fades, still lamp).
-- All interface copy goes in `lib/strings.ts`. No UI strings in components.
+- All interface copy goes in `lib/strings.ts`, in both dictionaries. No UI
+  strings in components; read them with `useStrings()` (client) or
+  `getStrings(lang)` (server).
 - Take poem text from a reliable source (Arquivo Pessoa) and check it. Never
   write a poem from memory, and never invent Laura's words or reflections:
   use clearly marked placeholder text.

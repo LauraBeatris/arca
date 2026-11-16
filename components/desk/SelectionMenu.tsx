@@ -11,7 +11,8 @@ import {
   type CSSProperties,
   type Ref,
 } from "react";
-import { strings as t } from "@/lib/strings";
+import { useLang, useStrings } from "@/components/Lingua";
+import { poemPath } from "@/lib/lang";
 
 /**
  * A small floating card that opens over verses the reader selects on a
@@ -106,6 +107,8 @@ export function SelectionMenu({
   poem: { slug: string; title: string } | null;
   page: number;
 }) {
+  const t = useStrings();
+  const lang = useLang();
   const [target, setTarget] = useState<Target | null>(null);
   const [translation, setTranslation] = useState<Translation>({ status: "idle" });
   const [speaking, setSpeaking] = useState(false);
@@ -462,7 +465,7 @@ export function SelectionMenu({
 
   const share = async () => {
     if (!target || !poem) return;
-    const url = `${window.location.origin}/poema/${poem.slug}`;
+    const url = `${window.location.origin}${poemPath(lang, poem.slug)}`;
     const text = t.shareQuote(target.text, poem.title);
     if (navigator.share) {
       try {
@@ -539,7 +542,7 @@ export function SelectionMenu({
         {word && (
           <li>
             <a
-              href={`https://dicionario.priberam.org/${encodeURIComponent(word.toLocaleLowerCase("pt"))}`}
+              href={t.dictionaryUrl(word)}
               target="_blank"
               rel="noopener noreferrer"
               aria-label={t.dictionary(word)}

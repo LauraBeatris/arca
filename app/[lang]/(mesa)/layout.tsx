@@ -7,7 +7,7 @@ import { getPoems } from "@/lib/poems";
  * (`/poema/<slug>`), so picking a sheet up or putting it down never reloads
  * it. The pages below only say which URL exists.
  */
-export default function MesaLayout({ children }: LayoutProps<"/">) {
+export default function MesaLayout({ children }: LayoutProps<"/[lang]">) {
   const poems = getPoems().map((poem) => ({
     slug: poem.slug,
     title: poem.title,

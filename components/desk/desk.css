@@ -105,6 +105,13 @@
   animation: marca-surge 900ms ease 1000ms both;
 }
 
+/* Only in English: how to read the Portuguese poems in English. */
+.mesa-topo .mesa-aviso-lingua {
+  font-size: 0.78rem;
+  font-style: normal;
+  opacity: 0.66;
+}
+
 /*
  * The mark hangs to the left of the word, so the word itself stays centred
  * over the tagline and the pile.
@@ -850,6 +857,17 @@
   text-decoration: underline;
   text-decoration-color: rgb(239 230 210 / 0.4);
   text-underline-offset: 0.25em;
+}
+
+/* The language switch: two small capitals, the same size target as the
+   sound switch beside it. */
+.botao[data-variante="lingua"] {
+  min-width: 48px;
+  padding: 0 0.6em;
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  text-decoration: none;
+  opacity: 0.82;
 }
 
 /* Only an icon (the sound switch): a 48px target, a 34px circle on hover. */
