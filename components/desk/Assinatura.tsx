@@ -1,7 +1,8 @@
 import type { CSSProperties } from "react";
 import { useStrings } from "@/components/Lingua";
 
-const SITE = "https://laurabeatris.com";
+// Tagged so visits from the Arca show up as such in the site's analytics.
+const SITE = "https://laurabeatris.com/?utm_source=arca";
 
 type Stroke = {
   d: string;
@@ -81,9 +82,13 @@ const STROKES: Stroke[] = [
 export function Assinatura() {
   const t = useStrings();
   return (
-    <a className="assinatura" href={SITE}>
+    // A new tab, so the desk (and the poem picked up on it) stays open.
+    <a className="assinatura" href={SITE} target="_blank" rel="noopener">
       <span className="assinatura-texto">{t.builtBy}</span>
-      <span className="sr-only"> {t.builtByName}</span>
+      <span className="sr-only">
+        {" "}
+        {t.builtByName} {t.opensInNewTab}
+      </span>
       <svg
         className="assinatura-traco"
         viewBox="0 0 257.1 145.5"

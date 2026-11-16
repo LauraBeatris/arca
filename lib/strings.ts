@@ -103,6 +103,7 @@ const pt = {
   // out to screen readers; on screen the signature says it.
   builtBy: "built by",
   builtByName: "Laura Beatris",
+  opensInNewTab: "(abre num novo separador)",
 
   // The switch to the other language, written in that language: it is for
   // the people who read it.
@@ -213,6 +214,7 @@ const en: Strings = {
 
   builtBy: "built by",
   builtByName: "Laura Beatris",
+  opensInNewTab: "(opens in a new tab)",
 
   otherLang: {
     lang: "pt",
