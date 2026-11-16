@@ -19,8 +19,10 @@
   );
   --folha-h: calc(var(--folha-w) * 1.42);
   --s-pilha: 0.8;
+  /* The engine replaces --topo with the title's measured height. */
   --pilha-y: calc(
-    var(--topo) + (100dvh - var(--topo) - var(--barra) - var(--sob-pilha)) / 2
+    var(--topo-medido, var(--topo)) +
+      (100dvh - var(--topo-medido, var(--topo)) - var(--barra) - var(--sob-pilha)) / 2
   );
   --pegada-y: calc((100dvh - var(--barra)) / 2 + 4px);
 
@@ -43,10 +45,10 @@
   .mesa {
     --topo: 68px;
     --s-pilha: 0.9;
-    /* Too narrow to stand the candle beside the pile: it goes below it,
-       above the buttons, and the pile moves up to make room. The candle is
-       52px at this width; plain px because the engine parses this value. */
-    --sob-pilha: 72px;
+    /* Too narrow to stand the candle beside the pile: it goes below the
+       pile's corner, above the buttons, overlapping the strip kept here.
+       Plain px because the engine parses this value. */
+    --sob-pilha: 44px;
   }
 }
 

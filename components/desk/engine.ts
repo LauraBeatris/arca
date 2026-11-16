@@ -60,6 +60,8 @@ const REST_LIFT = 2;
 const DRAG_LIFT = 16;
 const PICKED_LIFT = 90;
 const PILE_DIM = 0.36;
+/** Clear space between the title block and the top of the pile. */
+const HEADER_GAP = 18;
 /** Height of the candle flame above the desk, in px. */
 const CANDLE_HEIGHT = 46;
 /** Where the clip grips the sheets, as fractions of the sheet size. */
@@ -257,6 +259,9 @@ export class DeskEngine {
     this.motionQuery.addEventListener("change", this.onMotionChange);
     this.resizer = new ResizeObserver(this.onResize);
     this.resizer.observe(root);
+    // The title grows when its web font arrives.
+    const header = root.querySelector(".mesa-topo");
+    if (header) this.resizer.observe(header);
 
     this.draw();
     this.invalidate();
@@ -295,7 +300,15 @@ export class DeskEngine {
     this.vw = rect.width;
     this.vh = rect.height;
     const style = getComputedStyle(this.root);
-    const top = parseFloat(style.getPropertyValue("--topo")) || 64;
+    // The title block's real height (the tagline, and in English a second
+    // line, can wrap), so the pile never crowds it. Written back as
+    // --topo-medido for the CSS that places the candle.
+    const header = this.root.querySelector<HTMLElement>(".mesa-topo");
+    const top = Math.max(
+      parseFloat(style.getPropertyValue("--topo")) || 64,
+      header ? Math.ceil(header.offsetTop + header.offsetHeight + HEADER_GAP) : 0,
+    );
+    this.root.style.setProperty("--topo-medido", `${top}px`);
     const bar = parseFloat(style.getPropertyValue("--barra")) || 96;
     // On phones a strip under the pile is kept for the candle.
     const under = parseFloat(style.getPropertyValue("--sob-pilha")) || 0;
@@ -307,6 +320,8 @@ export class DeskEngine {
       (this.vh - top - bar - under - 12) / this.H,
       (this.vw - 28) / this.W,
     );
+    // The candle's CSS places it from the pile's real size.
+    this.root.style.setProperty("--s-pilha", String(this.pileScale));
     this.pileX = this.vw / 2;
     this.pileY = top + (this.vh - top - bar - under) / 2;
     // Land the picked-up sheet on whole pixels so its text stays sharp.
