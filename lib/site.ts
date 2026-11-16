@@ -2,7 +2,8 @@ import { DEFAULT_LANG, LANGS, type Lang } from "@/lib/lang";
 
 /**
  * The site's own address, for canonical links, hreflang, the sitemap and
- * structured data. On Vercel it is the production domain (arcadepessoa.com);
+ * structured data. On Vercel it is the primary production domain, the one
+ * the others redirect to (www.arcadepessoa.com, set in the Vercel dashboard);
  * running locally it is the dev server.
  */
 const host = process.env.VERCEL_PROJECT_PRODUCTION_URL;
