@@ -92,7 +92,12 @@ const pt = {
   notFoundTitle: "Esta folha não está na arca.",
   notFoundBack: "Voltar à pilha",
 
-  pageTitle: (title: string) => `${title} · Arca`,
+  // Titles and snippets for tabs and search results.
+  homeTitle: "Arca · Poemas de Fernando Pessoa",
+  pageTitle: (title: string) => `${title} · Fernando Pessoa · Arca`,
+  poemDescription: (opening: string, title: string, book: string) =>
+    `“${opening}” ${title}, de Fernando Pessoa (${book}).`,
+  genre: "Poesia",
 
   // The switch to the other language, written in that language: it is for
   // the people who read it.
@@ -195,7 +200,11 @@ const en: Strings = {
   notFoundTitle: "This sheet isn’t in the Arca.",
   notFoundBack: "Back to the pile",
 
-  pageTitle: (title) => `${title} · Arca`,
+  homeTitle: "Arca · Poems by Fernando Pessoa",
+  pageTitle: (title) => `${title} · Fernando Pessoa · Arca`,
+  poemDescription: (opening, title, book) =>
+    `“${opening}” ${title}, by Fernando Pessoa (${book}).`,
+  genre: "Poetry",
 
   otherLang: {
     lang: "pt",

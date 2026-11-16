@@ -262,7 +262,7 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
   }, [pickedSlug, flipped]);
 
   useEffect(() => {
-    document.title = picked ? t.pageTitle(current.title) : t.siteTitle;
+    document.title = picked ? t.pageTitle(current.title) : t.homeTitle;
   }, [picked, current.title, t]);
 
   /* ------------------------------------------------------------------ keys */

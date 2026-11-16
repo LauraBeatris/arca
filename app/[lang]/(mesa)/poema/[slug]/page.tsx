@@ -1,14 +1,19 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { DEFAULT_LANG, LANGS, isLang, poemPath } from "@/lib/lang";
-import { getPoem, getPoems } from "@/lib/poems";
+import { JsonLd } from "@/components/JsonLd";
+import { DEFAULT_LANG, isLang, poemPath } from "@/lib/lang";
+import { getPoem, getPoems, type Poem } from "@/lib/poems";
+import { absoluteUrl, languageAlternates, pessoaJsonLd } from "@/lib/site";
 import { getStrings } from "@/lib/strings";
 
 /** One URL per poem: the desk shows that poem picked up. */
 export function generateStaticParams() {
   return getPoems().map((poem) => ({ slug: poem.slug }));
 }
+
+/** The first two lines, for search snippets. */
+const opening = (poem: Poem) => poem.lines.slice(0, 2).join(" / ");
 
 export async function generateMetadata({
   params,
@@ -20,18 +25,36 @@ export async function generateMetadata({
   const t = getStrings(lang);
   return {
     title: t.pageTitle(poem.title),
-    description: `${poem.title}, ${t.author} (${t.bookName[poem.book]}).`,
+    description: t.poemDescription(opening(poem), poem.title, t.bookName[poem.book]),
     alternates: {
       canonical: poemPath(lang, poem.slug),
-      languages: Object.fromEntries(LANGS.map((l) => [l, poemPath(l, poem.slug)])),
+      languages: languageAlternates((l) => poemPath(l, poem.slug)),
     },
   };
 }
 
 async function KnownPoem({ params }: Pick<PageProps<"/[lang]/poema/[slug]">, "params">) {
-  const { slug } = await params;
-  if (!getPoem(slug)) notFound();
-  return null;
+  const { lang: param, slug } = await params;
+  const poem = getPoem(slug);
+  if (!poem) notFound();
+  const lang = isLang(param) ? param : DEFAULT_LANG;
+  const t = getStrings(lang);
+  return (
+    <JsonLd
+      data={{
+        "@type": "CreativeWork",
+        name: poem.title,
+        genre: t.genre,
+        // The poems are always Pessoa's Portuguese, whatever the interface.
+        inLanguage: "pt",
+        author: pessoaJsonLd,
+        isPartOf: { "@type": "CreativeWork", name: t.bookName[poem.book] },
+        text: poem.lines.join("\n"),
+        url: absoluteUrl(poemPath(lang, poem.slug)),
+        ...(poem.source ? { isBasedOn: poem.source } : {}),
+      }}
+    />
+  );
 }
 
 export default function PoemPage({ params }: PageProps<"/[lang]/poema/[slug]">) {

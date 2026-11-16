@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Libre_Caslon_Text, Special_Elite } from "next/font/google";
 import { LinguaProvider } from "@/components/Lingua";
 import { DEFAULT_LANG, LANGS, homePath, isLang } from "@/lib/lang";
+import { languageAlternates, siteUrl } from "@/lib/site";
 import { getStrings } from "@/lib/strings";
 import "../globals.css";
 
@@ -34,11 +35,13 @@ export async function generateMetadata({
   const lang = isLang(param) ? param : DEFAULT_LANG;
   const t = getStrings(lang);
   return {
-    title: t.siteTitle,
+    metadataBase: siteUrl,
+    title: t.homeTitle,
     description: t.description,
+    applicationName: t.siteTitle,
     alternates: {
       canonical: homePath(lang),
-      languages: Object.fromEntries(LANGS.map((l) => [l, homePath(l)])),
+      languages: languageAlternates(homePath),
     },
   };
 }
