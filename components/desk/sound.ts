@@ -1,10 +1,11 @@
 /**
  * Desk sounds: paper sliding, lifting, landing, turning, and the candle.
  *
- * Like the paper, the sounds are made here rather than recorded: each one is
- * shaped noise (a `rustle` is the hiss of paper moving, a `thump` is it
- * landing). To use a recording instead, give a sound a `src` in SOUNDS; the
- * recipe is then only the fallback while the file loads or if it fails.
+ * Most sounds are made here rather than recorded: each one is shaped noise (a
+ * `rustle` is the hiss of paper moving, a `thump` is it landing). A sound can
+ * instead name recordings in `src` (files in `public/sounds/`); each play then
+ * picks one of them, and the recipe is only the fallback while they load or
+ * if they fail.
  *
  * Sounds only ever play in answer to something the visitor did, they are
  * short and quiet, and they can be turned off (see `lib/prefs.ts`).
@@ -53,8 +54,12 @@ type Thump = {
 type Layer = Rustle | Thump;
 
 type Sound = {
-  /** Optional recording to play instead of the recipe. */
-  src?: string;
+  /**
+   * Recordings to play instead of the recipe. Each play picks one at random
+   * (never the same one twice running) and nudges its speed a little, so no
+   * two turns sound alike.
+   */
+  src?: string[];
   recipe: Layer[];
 };
 
@@ -83,12 +88,21 @@ export const SOUNDS: Record<SoundId, Sound> = {
       { kind: "rustle", at: 0.26, dur: 0.08, gain: 0.05, from: 2600, to: 1800, q: 0.9, crackle: 0.3, attack: 0.004 },
     ],
   },
-  // A page turning, after a recording of a book on a reading desk: one
-  // continuous, airy swish rather than a run of clicks. A soft, bright brush
-  // as the corner lifts, a breath while it rises, the broad sweep as it falls
-  // through the air (most of it around 2 kHz, with a little low air pushed
-  // ahead of it), and a tail that darkens as the page settles.
+  // Page turns are recordings of real books. All are CC0 (public domain)
+  // from Freesound, trimmed, high-passed at 150 Hz to take out room rumble and
+  // levelled to the synthesised sounds:
+  //   page-1, page-2      freesound.org/s/656546  "Page Turn", IENBA
+  //   page-3              freesound.org/s/858468  "Flipping Page Forward", Ym_The_Cosmic
+  //   page-back-1         freesound.org/s/858467  "Flipping Page Back", Ym_The_Cosmic
+  //   page-back-2         freesound.org/s/656546  "Page Turn", IENBA
+  //   page-back-3         freesound.org/s/676674  "Page flip", cameronpride
+  //   flip-1              freesound.org/s/856497  "Turning page (heavy paper)", xkeril
+  // The recipes are the fallback: one continuous, airy swish. A soft, bright
+  // brush as the corner lifts, a breath while it rises, the broad sweep as it
+  // falls (most of it around 2 kHz, with a little low air pushed ahead of it),
+  // and a tail that darkens as the page settles.
   page: {
+    src: ["/sounds/page-1.mp3", "/sounds/page-2.mp3", "/sounds/page-3.mp3"],
     recipe: [
       { kind: "rustle", shape: "hit", dur: 0.06, gain: 0.05, from: 3600, to: 2500, q: 0.8, crackle: 0.5 },
       { kind: "rustle", at: 0.06, dur: 0.27, gain: 0.08, from: 2400, to: 1600, q: 0.95, crackle: 0.45, attack: 0.05 },
@@ -98,6 +112,7 @@ export const SOUNDS: Record<SoundId, Sound> = {
     ],
   },
   pageBack: {
+    src: ["/sounds/page-back-1.mp3", "/sounds/page-back-2.mp3", "/sounds/page-back-3.mp3"],
     recipe: [
       { kind: "rustle", shape: "hit", dur: 0.06, gain: 0.05, from: 3300, to: 2300, q: 0.8, crackle: 0.5 },
       { kind: "rustle", at: 0.06, dur: 0.27, gain: 0.08, from: 2200, to: 1450, q: 0.95, crackle: 0.45, attack: 0.05 },
@@ -106,9 +121,10 @@ export const SOUNDS: Record<SoundId, Sound> = {
       { kind: "rustle", at: 0.23, dur: 0.22, gain: 0.03, from: 1400, to: 850, q: 0.7, crackle: 0.3, attack: 0.02 },
     ],
   },
-  // Turning the whole sheet over: the same gesture with a bigger, looser
+  // Turning the whole sheet over: the same gesture with a bigger, heavier
   // sheet, so a little slower and deeper.
   flip: {
+    src: ["/sounds/flip-1.mp3"],
     recipe: [
       { kind: "rustle", shape: "hit", dur: 0.07, gain: 0.05, from: 3100, to: 2200, q: 0.8, crackle: 0.5 },
       { kind: "rustle", at: 0.07, dur: 0.33, gain: 0.08, from: 2100, to: 1400, q: 0.95, crackle: 0.45, attack: 0.06 },
@@ -209,11 +225,39 @@ export function makeNoise(ctx: BaseAudioContext): AudioBuffer {
   return buffer;
 }
 
+/** Fetched once per page load and shared by every DeskSound. */
+let downloads: Map<string, Promise<ArrayBuffer>> | null = null;
+
+/**
+ * Downloads every recording. Needs no user gesture, so the desk calls it as
+ * soon as it mounts and the first page turn already has its file.
+ */
+export function preloadSounds() {
+  if (downloads || typeof window === "undefined") return;
+  downloads = new Map();
+  for (const sound of Object.values(SOUNDS)) {
+    for (const src of sound.src ?? []) {
+      const bytes = fetch(src).then((response) => {
+        if (!response.ok) throw new Error(`${response.status} ${src}`);
+        return response.arrayBuffer();
+      });
+      // A failed download leaves that sound on its recipe; never unhandled.
+      bytes.catch(() => {});
+      downloads.set(src, bytes);
+    }
+  }
+}
+
+/** How long a play may wait for its recording before using the recipe. */
+const WAIT_FOR_RECORDING = 0.2;
+
 export class DeskSound {
   private ctx: AudioContext | null = null;
   private out: AudioNode | null = null;
   private noise: AudioBuffer | null = null;
-  private recordings = new Map<SoundId, AudioBuffer>();
+  private recordings = new Map<SoundId, AudioBuffer[]>();
+  private decoding = new Map<SoundId, Promise<AudioBuffer[]>>();
+  private last = new Map<SoundId, AudioBuffer>();
 
   /** Browsers only allow sound after a tap or key press, so this is lazy. */
   private start(): AudioContext | null {
@@ -234,16 +278,22 @@ export class DeskSound {
     this.ctx = ctx;
     this.out = soften;
     this.noise = makeNoise(ctx);
+    preloadSounds();
     for (const id of Object.keys(SOUNDS) as SoundId[]) {
-      const src = SOUNDS[id].src;
-      if (!src) continue;
-      fetch(src)
-        .then((response) => response.arrayBuffer())
-        .then((bytes) => ctx.decodeAudioData(bytes))
-        .then((buffer) => this.recordings.set(id, buffer))
-        .catch(() => {
-          // Keep the synthesised sound if a recording fails to load.
-        });
+      const srcs = SOUNDS[id].src;
+      if (!srcs?.length) continue;
+      const decoded = Promise.allSettled(
+        srcs.map((src) =>
+          // Decoding detaches the bytes, so each context decodes a copy.
+          downloads!.get(src)!.then((bytes) => ctx.decodeAudioData(bytes.slice(0))),
+        ),
+      ).then((results) =>
+        results.flatMap((result) => (result.status === "fulfilled" ? [result.value] : [])),
+      );
+      this.decoding.set(id, decoded);
+      void decoded.then((buffers) => {
+        if (buffers.length) this.recordings.set(id, buffers);
+      });
     }
     return ctx;
   }
@@ -253,19 +303,40 @@ export class DeskSound {
       const ctx = this.start();
       if (!ctx || !this.out || !this.noise) return;
       if (ctx.state === "suspended") void ctx.resume();
-      const when = ctx.currentTime + 0.01;
-      const recording = this.recordings.get(id);
-      if (recording) {
-        const source = ctx.createBufferSource();
-        source.buffer = recording;
-        source.connect(this.out);
-        source.start(when);
-      } else {
-        playRecipe(ctx, this.out, this.noise, SOUNDS[id].recipe, when);
+      const asked = ctx.currentTime;
+      const pending = this.decoding.get(id);
+      if (this.recordings.has(id) || !pending) {
+        this.playNow(id, ctx.currentTime + 0.01);
+        return;
       }
+      // The very first play arrives while its file is still decoding (a few
+      // milliseconds). Wait for it; a sound that would come late enough to
+      // feel unrelated to the gesture is skipped instead.
+      void pending.then(() => {
+        if (ctx.currentTime - asked > WAIT_FOR_RECORDING) return;
+        this.playNow(id, ctx.currentTime + 0.01);
+      });
     } catch {
       // Sound is a nicety; never let it break the desk.
     }
+  }
+
+  private playNow(id: SoundId, when: number) {
+    const ctx = this.ctx;
+    if (!ctx || !this.out || !this.noise) return;
+    const buffers = this.recordings.get(id);
+    if (!buffers) {
+      playRecipe(ctx, this.out, this.noise, SOUNDS[id].recipe, when);
+      return;
+    }
+    const choices = buffers.length > 1 ? buffers.filter((b) => b !== this.last.get(id)) : buffers;
+    const buffer = choices[Math.floor(Math.random() * choices.length)];
+    this.last.set(id, buffer);
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.playbackRate.value = 0.95 + Math.random() * 0.1;
+    source.connect(this.out);
+    source.start(when);
   }
 
   dispose() {

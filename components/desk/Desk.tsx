@@ -28,7 +28,7 @@ import { DeskEngine, type View } from "./engine";
 import { Assinatura } from "./Assinatura";
 import { Marca } from "./Marca";
 import { SelectionMenu, type SelectionMenuHandle } from "./SelectionMenu";
-import { DeskSound, SOUNDS, makeNoise, playRecipe, type SoundId } from "./sound";
+import { DeskSound, SOUNDS, makeNoise, playRecipe, preloadSounds, type SoundId } from "./sound";
 import "./desk.css";
 
 export type DeskPoem = Omit<PoemMeta, "sheetCount" | "source"> & {
@@ -109,6 +109,10 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
     soundRef.current ??= new DeskSound();
     soundRef.current.play(id);
   }, []);
+  // Fetch the recordings early (no gesture needed) so the first turn has them.
+  useEffect(() => {
+    if (soundOn) preloadSounds();
+  }, [soundOn]);
   useEffect(() => () => soundRef.current?.dispose(), []);
 
   /* --------------------------------------------------------------- actions */
