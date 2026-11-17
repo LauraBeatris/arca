@@ -29,7 +29,7 @@ export type PaperMaterial = {
   age: number;
   /** Chance (0..1) that a sheet carries a fold line from being kept folded. */
   creaseChance: number;
-  /** Flat colour used before WebGL is ready and when it is unavailable. */
+  /** Average colour of the baked fallback paper (public/papel/), where the lamp reaches least. */
   fallback: string;
 };
 
@@ -42,7 +42,7 @@ export const PAPERS: Record<PaperId, PaperMaterial> = {
     bevel: 0.55,
     age: 0.45,
     creaseChance: 0,
-    fallback: "#e9dfc6",
+    fallback: "rgb(183 163 131)",
   },
   // Cancioneiro: thin typewriter paper, uneven ribbon ink.
   maquina: {
@@ -52,7 +52,7 @@ export const PAPERS: Record<PaperId, PaperMaterial> = {
     bevel: 0.18,
     age: 0.9,
     creaseChance: 0.8,
-    fallback: "#e3ddcd",
+    fallback: "rgb(177 163 140)",
   },
 };
 
