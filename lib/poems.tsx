@@ -50,6 +50,8 @@ export type Poem = PoemMeta & {
   sheets: ReactNode[];
   /** The verse as plain text, one entry per line, with the markup removed. */
   lines: string[];
+  /** The whole poem as plain text: stanzas apart by a blank line, no markup. */
+  text: string;
 };
 
 const POEMS_DIR = path.join(process.cwd(), "content", "poems");
@@ -115,6 +117,13 @@ function readPoem(file: string): Poem {
       .split("\n")
       .map((line) => line.trim())
       .filter((line) => line && !SHEET_BREAK.test(line)),
+    text: content
+      .replace(/<[^>]+>/g, "")
+      .split("\n")
+      .map((line) => (SHEET_BREAK.test(line) ? "" : line.trim()))
+      .join("\n")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim(),
   };
 }
 
