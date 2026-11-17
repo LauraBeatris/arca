@@ -308,6 +308,57 @@
   }
 }
 
+/*
+ * From tablet width up, the title is a wordmark in the top left corner,
+ * across from the language and sound switches, and the pile has the middle
+ * to itself. Touch devices keep the centred title: the tilt switch already
+ * holds that corner.
+ */
+@media (min-width: 640px) {
+  .mesa:not(:has(.canto-esquerdo)) .mesa-topo {
+    top: max(16px, env(safe-area-inset-top));
+    left: max(20px, env(safe-area-inset-left));
+    right: auto;
+    align-items: flex-start;
+    gap: 0.15em;
+    padding-inline: 0;
+    text-align: left;
+  }
+  .mesa:not(:has(.canto-esquerdo)) .mesa-topo h1 {
+    padding-left: 0;
+    font-size: 1.2rem;
+  }
+  /* Standing in the corner there is no room to hang it to the left. */
+  .mesa:not(:has(.canto-esquerdo)) .marca {
+    position: relative;
+    right: auto;
+    bottom: -0.12em;
+    display: inline-block;
+    margin-right: 0.4em;
+  }
+  .mesa:not(:has(.canto-esquerdo)) .mesa-topo p {
+    font-size: 0.8rem;
+  }
+}
+
+/*
+ * With room on both sides of the buttons, the English hint leaves the title
+ * and sits in the lower left corner, across from the signature.
+ */
+@media (min-width: 960px) {
+  .mesa-topo .mesa-aviso-lingua {
+    position: fixed;
+    left: max(20px, env(safe-area-inset-left));
+    bottom: max(20px, env(safe-area-inset-bottom));
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+    max-width: 20em;
+    font-style: italic;
+    text-align: left;
+  }
+}
+
 /* ----------------------------------------------------------------- sheets */
 
 .pilha {
