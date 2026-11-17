@@ -11,7 +11,7 @@
 .mesa {
   --topo: 78px; /* space kept for the title */
   --barra: 96px; /* space kept for the buttons */
-  --sob-pilha: 0px; /* space kept under the pile (for the candle on phones) */
+  --sob-pilha: 0px; /* space kept under the pile (the candle on phones, the tagline on wide screens) */
   --folha-w: clamp(
     220px,
     min(92vw, calc((100dvh - var(--barra) - 40px) / 1.42)),
@@ -71,8 +71,9 @@
   --escuro: rgb(140 140 140);
 }
 
-/* Narrower than this the buttons take two rows. */
-@media (max-width: 859px) {
+/* Narrower than this the buttons take two rows: a held sheet's buttons,
+   with language and sound beside them, need about 970px for one. */
+@media (max-width: 999px) {
   .mesa {
     --barra: 148px;
   }
@@ -133,25 +134,15 @@
   transition: opacity 0.4s ease;
 }
 
-/* The mark and the word make one lockup, centred together. */
+/* The title is the mark alone; the site's name is in it for screen
+   readers. Its font size is only the unit the mark is sized in. */
 .mesa-topo h1 {
   position: relative;
   display: flex;
-  align-items: baseline;
   justify-content: center;
-  /* With the drawing's own empty edge, about a third of an em of air. */
-  gap: 0.22em;
   margin: 0;
   font-size: 1.35rem;
   font-weight: 400;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
-
-/* Letter-spacing adds a gap after the last letter; this takes it back, so
-   the word ends where its last letter does. */
-.titulo {
-  margin-right: -0.16em;
 }
 
 .mesa-topo p {
@@ -163,26 +154,17 @@
 }
 
 /*
- * The mark stands to the left of the word. Its bottom edge starts on the
- * word's baseline (align-items: baseline above) and drops a little, so the
- * trunk sits on the line and the sheets rising from it are centred on the
- * capitals rather than towering over them.
+ * The mark: the trunk alone, with no word beside it.
  *
  * It plays once, on first paint: the trunk draws itself (0–0.7s), fills,
  * throws its lid back (0.7s), the sheets rise out of it one after another
- * (0.85s) and the ribbon drops last (1.45s). The letters arrive meanwhile.
- * Each rule below holds the final pose; the keyframes only say where from.
+ * (0.85s) and the ribbon drops last (1.45s). Each rule below holds the
+ * final pose; the keyframes only say where from.
  */
 .marca {
-  --marca-desce: 0.12em;
-  position: relative;
-  top: var(--marca-desce);
+  display: block;
   flex: none;
-  height: 1.3em;
-  /* The drawing leaves 4 of its 40 units empty at each side: the left one
-     is taken back so the ink, not the box, is what gets centred. The top
-     margin keeps the mark from making the line any taller than the word. */
-  margin: -0.6em 0 0 -0.137em;
+  height: 1.8em;
   aspect-ratio: 40 / 38;
   overflow: visible;
   filter: drop-shadow(0 1px 2px rgb(20 10 4 / 0.55));
@@ -281,12 +263,6 @@
   animation: marca-fita 380ms var(--ease-out) 1450ms both;
 }
 
-.letra {
-  display: inline-block;
-  animation: marca-letra 800ms var(--ease-out) both;
-  animation-delay: calc(250ms + var(--i) * 80ms);
-}
-
 @keyframes marca-traca {
   from {
     stroke-dashoffset: 1;
@@ -323,14 +299,6 @@
   }
 }
 
-@keyframes marca-letra {
-  from {
-    opacity: 0;
-    transform: translateY(0.35em);
-    filter: blur(4px);
-  }
-}
-
 /* A sheet held up to read covers the title, so the title steps back. */
 .mesa[data-pegada] .mesa-topo {
   opacity: 0;
@@ -342,26 +310,6 @@
   }
   .mesa-topo p {
     font-size: 0.78rem;
-  }
-}
-
-/*
- * The narrowest phones have no room beside the word (the corner switches sit
- * there), so the mark stands above it and the pile moves down to make room.
- */
-@media (max-width: 379px) {
-  .mesa {
-    --topo: 94px;
-  }
-  .mesa-topo h1 {
-    flex-direction: column;
-    align-items: center;
-    gap: 0.1em;
-  }
-  .marca {
-    top: 0;
-    height: 1.5em;
-    margin: 0;
   }
 }
 
@@ -422,10 +370,16 @@
 }
 
 /*
- * With room beside the pile, only the title stays at the top, on the wood,
- * with no tagline.
+ * With room beside the pile, only the title stays at the top, on the wood.
+ * The tagline goes under the pile, centred, set a little off square like a
+ * note left on the desk. --sob-pilha keeps a strip for it, so the title,
+ * the pile and the note are centred together and the note never reaches
+ * the buttons.
  */
 @media (min-width: 1100px) {
+  .mesa {
+    --sob-pilha: 64px;
+  }
   .etiqueta {
     display: contents;
   }
@@ -435,7 +389,16 @@
     translate: 0 var(--desce);
   }
   .mesa-topo .etiqueta p {
-    display: none;
+    position: fixed;
+    /* Clear of the lowest sheets, which stand out a little past the top one. */
+    top: calc(var(--pilha-y) + var(--folha-h) * var(--s-pilha) / 2 + 34px);
+    left: 50%;
+    width: max-content;
+    max-width: calc(100vw - 32px);
+    font-size: 0.95rem;
+    line-height: 1.45;
+    opacity: 0.8;
+    transform: translateX(-50%) rotate(-1.2deg);
   }
 }
 
@@ -1139,21 +1102,36 @@
   }
 }
 
-/* Quiet switches in the top right corner: language and sound. */
+/* Quiet switches beside the controls, after a short rule: language and
+   sound. They stay whatever the desk is showing. */
 .canto {
-  position: absolute;
-  z-index: 100;
-  top: max(6px, env(safe-area-inset-top));
   /* A row centred on one line, so a text button ("PT") and an icon button
      sit level instead of sharing a text baseline. */
   display: flex;
   align-items: center;
+  pointer-events: auto;
 }
 
-.canto-direito {
-  right: max(6px, env(safe-area-inset-right));
-  /* Level with the title wherever the title comes down to (--desce). */
-  translate: 0 var(--desce);
+.canto::before {
+  content: "";
+  width: 1px;
+  height: 18px;
+  margin-right: 10px;
+  background: rgb(239 230 210 / 0.25);
+}
+
+/* Phones have no room for them in the bar (a held sheet's buttons take
+   both rows): they stand in the top right corner, over the label. */
+@media (max-width: 639px) {
+  .canto {
+    position: fixed;
+    z-index: 100;
+    top: max(0px, env(safe-area-inset-top));
+    right: max(6px, env(safe-area-inset-right));
+  }
+  .canto::before {
+    display: none;
+  }
 }
 
 /* -------------------------------------------------------------- signature */
@@ -1276,13 +1254,17 @@
     visibility 0s linear 0.4s;
 }
 
-/* On phones it takes the bottom row, "built by" over the signature, and the
-   pile's buttons sit on the row above it. (Held up, the sheet's buttons
-   take both rows; the signature has stepped back by then.) */
-@media (max-width: 639px) {
+/* Where the bar has two rows (narrower than 1000px), the signature takes the
+   bottom one and the pile's buttons sit on the row above it. (Held up, the
+   sheet's buttons take both rows; the signature has stepped back by then.) */
+@media (max-width: 999px) {
   .mesa:not([data-pegada]) .comandos {
     padding-bottom: calc(max(20px, env(safe-area-inset-bottom)) + 48px);
   }
+}
+
+/* On phones, "built by" over the signature. */
+@media (max-width: 639px) {
   .assinatura {
     right: max(10px, env(safe-area-inset-right));
     flex-direction: column;
@@ -1602,10 +1584,6 @@
   }
   .mesa-topo {
     gap: 0.5em;
-  }
-  /* Keep the corner switches level with the title, clear of the tagline. */
-  .canto {
-    top: max(0px, env(safe-area-inset-top));
   }
 }
 
@@ -2241,9 +2219,8 @@
   .menu-acoes [data-estado="copied"] .menu-icone {
     transition: opacity 200ms ease;
   }
-  /* The mark and the title fade in already in place. */
-  .marca,
-  .letra {
+  /* The mark fades in already drawn. */
+  .marca {
     animation: marca-surge 500ms ease both;
   }
   .marca * {

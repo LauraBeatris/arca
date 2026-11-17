@@ -416,22 +416,12 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
 
       <header className="mesa-topo">
         {/* A small cream label on the desk, like a bookplate. On wide screens
-            only the title stays, on the wood (desk.css). */}
+            only the title stays at the top and the tagline goes under the
+            pile (desk.css). */}
         <div className="etiqueta">
           <h1>
             <Marca />
             <span className="sr-only">{t.siteTitle}</span>
-            <span className="titulo" aria-hidden="true">
-              {Array.from(t.siteTitle).map((letter, i) => (
-                <span
-                  key={i}
-                  className="letra"
-                  style={{ "--i": i } as CSSProperties}
-                >
-                  {letter}
-                </span>
-              ))}
-            </span>
           </h1>
           <p>{t.tagline}</p>
         </div>
@@ -712,6 +702,49 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
               </div>
             </>
           )}
+          {/* Language and sound, beside the controls whatever is on the desk
+              (on phones they stand in the top right corner: desk.css). */}
+          <div className="canto">
+            {/* The other language, named in that language. A real link, so it
+                works before JavaScript loads; the click remembers the choice. */}
+            <a
+              className="botao"
+              data-variante="lingua"
+              href={switchPath(pathname, otherLang)}
+              hrefLang={t.otherLang.lang}
+              lang={t.otherLang.lang}
+              aria-label={t.otherLang.name}
+              title={t.otherLang.hint}
+              onClick={() => rememberLang(otherLang)}
+            >
+              {t.otherLang.short}
+            </a>
+            {/* A speaker whose waves fade out when it is muted. The name stays
+                "Som" and aria-pressed says whether it is on; the tooltip says
+                what pressing it will do. */}
+            <button
+              type="button"
+              className="botao"
+              data-variante="icone"
+              aria-label={t.sound}
+              aria-pressed={soundOn}
+              title={soundOn ? t.soundOff : t.soundOn}
+              onClick={toggleSound}
+            >
+              <svg
+                className="icone-som"
+                data-ligado={soundOn}
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path className="som-corneta" d="M3.75 9.6h3.1L11.4 5.9v12.2L6.85 14.4h-3.1z" />
+                <path className="som-onda som-onda-1" d="M14.6 9.4a3.7 3.7 0 0 1 0 5.2" />
+                <path className="som-onda som-onda-2" d="M17.2 6.9a7.3 7.3 0 0 1 0 10.2" />
+                <path className="som-mudo" d="M15.4 10.1l3.8 3.8M19.2 10.1l-3.8 3.8" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         {/* The candle is a real object on the desk and a real button: it
@@ -758,48 +791,6 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
             />
           </svg>
         </button>
-
-        <div className="canto canto-direito">
-          {/* The other language, named in that language. A real link, so it
-              works before JavaScript loads; the click remembers the choice. */}
-          <a
-            className="botao"
-            data-variante="lingua"
-            href={switchPath(pathname, otherLang)}
-            hrefLang={t.otherLang.lang}
-            lang={t.otherLang.lang}
-            aria-label={t.otherLang.name}
-            title={t.otherLang.hint}
-            onClick={() => rememberLang(otherLang)}
-          >
-            {t.otherLang.short}
-          </a>
-          {/* A speaker whose waves fade out when it is muted. The name stays
-              "Som" and aria-pressed says whether it is on; the tooltip says
-              what pressing it will do. */}
-          <button
-            type="button"
-            className="botao"
-            data-variante="icone"
-            aria-label={t.sound}
-            aria-pressed={soundOn}
-            title={soundOn ? t.soundOff : t.soundOn}
-            onClick={toggleSound}
-          >
-            <svg
-              className="icone-som"
-              data-ligado={soundOn}
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-              focusable="false"
-            >
-              <path className="som-corneta" d="M3.75 9.6h3.1L11.4 5.9v12.2L6.85 14.4h-3.1z" />
-              <path className="som-onda som-onda-1" d="M14.6 9.4a3.7 3.7 0 0 1 0 5.2" />
-              <path className="som-onda som-onda-2" d="M17.2 6.9a7.3 7.3 0 0 1 0 10.2" />
-              <path className="som-mudo" d="M15.4 10.1l3.8 3.8M19.2 10.1l-3.8 3.8" />
-            </svg>
-          </button>
-        </div>
 
         <Assinatura />
 
