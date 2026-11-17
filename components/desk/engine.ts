@@ -46,7 +46,11 @@ export type EngineEvents = {
   onPickUp(): void;
   /** The desk around a picked-up sheet was tapped. */
   onPutDown(): void;
-  /** A picked-up, clipped poem was swiped sideways. */
+  /**
+   * A picked-up sheet was leafed sideways (a swipe, a two-finger swipe on a
+   * trackpad, or a drag on the paper's margin): 1 is onwards (next page, then
+   * the back), -1 is back again.
+   */
   onPage(delta: 1 | -1): void;
   /** WebGL paper became available or was lost. */
   onPaper(ready: boolean): void;
@@ -188,6 +192,10 @@ export class DeskEngine {
   private drag: Drag | null = null;
   private backdrop: { id: number; x: number; y: number } | null = null;
   private touch: { x: number; y: number; t: number } | null = null;
+  /** A mouse drag on the paper of a picked-up sheet, to leaf it. */
+  private leaf: { id: number; x: number; y: number; t: number } | null = null;
+  /** A trackpad's sideways swipe: how far it has gone, and when it moved last. */
+  private wheel = { dx: 0, t: 0, spent: false };
   private reduced: boolean;
   private motionQuery: MediaQueryList;
   private resizer: ResizeObserver;
@@ -267,6 +275,7 @@ export class DeskEngine {
     root.addEventListener("pointercancel", this.onPointerCancel);
     root.addEventListener("touchstart", this.onTouchStart, { passive: true });
     root.addEventListener("touchend", this.onTouchEnd, { passive: true });
+    root.addEventListener("wheel", this.onWheel, { passive: false });
     canvas.addEventListener("webglcontextlost", this.onContextLost);
     canvas.addEventListener("webglcontextrestored", this.onContextRestored);
     this.motionQuery.addEventListener("change", this.onMotionChange);
@@ -840,6 +849,13 @@ export class DeskEngine {
 
     if (this.view.picked) {
       this.backdrop = onTop ? null : { id: e.pointerId, x: e.clientX, y: e.clientY };
+      // On the bare paper (not on words, which a drag selects) a mouse can
+      // take the sheet by its margin and leaf it.
+      this.leaf =
+        onTop && e.pointerType === "mouse" && this.isBarePaper(e.target)
+          ? { id: e.pointerId, x: e.clientX, y: e.clientY, t: e.timeStamp }
+          : null;
+      if (this.leaf) e.preventDefault();
       return;
     }
     if (!onTop) return;
@@ -888,6 +904,11 @@ export class DeskEngine {
   };
 
   private onPointerUp = (e: PointerEvent) => {
+    const l = this.leaf;
+    if (l && l.id === e.pointerId) {
+      this.leaf = null;
+      this.leafed(e.clientX - l.x, e.clientY - l.y, e.timeStamp - l.t, 60, Infinity);
+    }
     const b = this.backdrop;
     if (b && b.id === e.pointerId) {
       this.backdrop = null;
@@ -923,13 +944,40 @@ export class DeskEngine {
 
   private onPointerCancel = (e: PointerEvent) => {
     if (this.backdrop?.id === e.pointerId) this.backdrop = null;
+    if (this.leaf?.id === e.pointerId) this.leaf = null;
     if (this.drag?.id !== e.pointerId) return;
     this.drag = null;
     this.retarget();
     this.invalidate();
   };
 
-  /** Sideways swipe on a picked-up, clipped poem turns its pages (touch only). */
+  /**
+   * Somewhere a mouse can take hold of a picked-up sheet to leaf it: the
+   * margins of the front (its words are for selecting), or anywhere on the
+   * back, which cannot be selected.
+   */
+  private isBarePaper(target: EventTarget | null): boolean {
+    if (!(target instanceof Element) || target.closest("a, button, figure")) return false;
+    if (target.closest(".verso-folha")) return true;
+    return !target.closest(".verso, .cabecalho h2, .numeral, .rodape p, .margem, .tinta");
+  }
+
+  /**
+   * A sideways movement on a picked-up sheet leafs it, if it was clearly
+   * sideways, not someone selecting words, and (for a finger, which might be
+   * scrolling) quick. A mouse holding the paper may take its time.
+   */
+  private leafed(dx: number, dy: number, ms: number, min: number, maxMs = 700) {
+    // Words picked out by the drag (the back cannot be selected, but a click
+    // there can still leave an empty range behind).
+    const selecting = !!window.getSelection()?.toString().trim();
+    if (!this.view.picked || selecting || ms > maxMs) return;
+    if (Math.abs(dx) > min && Math.abs(dx) > Math.abs(dy) * 1.8) {
+      this.events.onPage(dx < 0 ? 1 : -1);
+    }
+  }
+
+  /** A sideways swipe on a picked-up sheet leafs it (touch). */
   private onTouchStart = (e: TouchEvent) => {
     const t = e.touches[0];
     this.touch =
@@ -941,15 +989,32 @@ export class DeskEngine {
   private onTouchEnd = (e: TouchEvent) => {
     const start = this.touch;
     this.touch = null;
-    const top = this.topPoem();
     const t = e.changedTouches[0];
-    if (!start || !t || !top || top.poem.sheets < 2 || this.view.flipped) return;
-    const dx = t.clientX - start.x;
-    const dy = t.clientY - start.y;
-    const quick = e.timeStamp - start.t < 600;
-    const selecting = !window.getSelection()?.isCollapsed;
-    if (quick && !selecting && Math.abs(dx) > 56 && Math.abs(dx) > Math.abs(dy) * 2) {
-      this.events.onPage(dx < 0 ? 1 : -1);
+    if (!start || !t) return;
+    this.leafed(t.clientX - start.x, t.clientY - start.y, e.timeStamp - start.t, 56);
+  };
+
+  /**
+   * A two-finger sideways swipe on a trackpad leafs a picked-up sheet once
+   * per swipe: the swipe's momentum must die down before the next one counts.
+   */
+  private onWheel = (e: WheelEvent) => {
+    if (!this.view.picked || e.ctrlKey) return;
+    if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+    // Sideways scrolling has nothing else to do on the desk.
+    e.preventDefault();
+    const w = this.wheel;
+    if (e.timeStamp - w.t > 260) {
+      w.dx = 0;
+      w.spent = false;
+    }
+    w.t = e.timeStamp;
+    if (w.spent) return;
+    w.dx += e.deltaMode === 1 ? e.deltaX * 16 : e.deltaX;
+    if (Math.abs(w.dx) > 70) {
+      w.spent = true;
+      // Fingers moving left push the page on, like turning it.
+      this.events.onPage(w.dx > 0 ? 1 : -1);
     }
   };
 
@@ -1007,6 +1072,7 @@ export class DeskEngine {
     root.removeEventListener("pointercancel", this.onPointerCancel);
     root.removeEventListener("touchstart", this.onTouchStart);
     root.removeEventListener("touchend", this.onTouchEnd);
+    root.removeEventListener("wheel", this.onWheel);
     canvas.removeEventListener("webglcontextlost", this.onContextLost);
     canvas.removeEventListener("webglcontextrestored", this.onContextRestored);
     window.removeEventListener("deviceorientation", this.onTilt);

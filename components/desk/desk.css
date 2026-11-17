@@ -497,11 +497,35 @@
   -webkit-touch-callout: none;
 }
 
-/* Picked up, it is something you read: the text can be selected. */
-.poema[data-pegado] .folha,
-.poema[data-pegado] .verso-folha {
+/* Picked up, it is something you read: the text can be selected. The back
+   is Laura's handwriting, not something to quote, so it is not; the whole
+   of it is paper you take hold of to turn. */
+.poema[data-pegado] .folha {
   -webkit-user-select: text;
   user-select: text;
+}
+
+/* Its bare margins are something you take hold of to leaf it (see
+   isBarePaper in engine.ts); the words keep the text cursor. */
+@media (hover: hover) and (pointer: fine) {
+  .poema[data-pegado] .folha-conteudo,
+  .poema[data-pegado] .verso-conteudo {
+    cursor: grab;
+  }
+
+  .poema[data-pegado] :is(
+      .verso,
+      .cabecalho h2,
+      .numeral,
+      .rodape p,
+    ) {
+    cursor: text;
+  }
+}
+
+/* Ink stops at the paper's edge. */
+.folha-conteudo {
+  overflow: clip;
 }
 
 .folha-conteudo,
@@ -558,6 +582,7 @@
 }
 
 .versos {
+  position: relative;
   width: fit-content;
   max-width: 100%;
   margin-inline: auto;
@@ -666,11 +691,14 @@
   white-space: nowrap;
 }
 
-.marcado,
-.verso-data {
-  color: var(--cobalto);
-  font-family: var(--font-serif), Georgia, serif;
-  font-style: italic;
+/* The day she marked it, in her hand. */
+.marcado {
+  color: var(--caneta);
+  font-family: var(--font-mao), "Segoe Print", "Bradley Hand", cursive;
+  font-size: 1.55em;
+  font-feature-settings: "calt" 1;
+  letter-spacing: 0;
+  opacity: 0.9;
 }
 
 .livro {
@@ -685,6 +713,105 @@
   left: 0;
   text-align: center;
   opacity: 0.7;
+}
+
+/* ------------------------------------------------- Laura's hand */
+
+/* Notes in her handwriting, beside a line or under the poem. Each one is
+   placed where the line before it sits (its static position), then moved
+   into the margin. Real text, but outside the verse and not selectable with
+   it, and lit like ink lying on the paper, not pressed into it. */
+.margem {
+  position: absolute;
+  display: block;
+  left: calc(100% + 0.9em + var(--mx, 0em));
+  margin-top: calc(-1.5em + var(--my, 0em));
+  width: var(--mw, 7em);
+  color: var(--caneta);
+  -webkit-text-fill-color: var(--caneta);
+  background: none;
+  text-shadow: none;
+  font-family: var(--font-mao), "Segoe Print", "Bradley Hand", cursive;
+  font-size: 1.05em;
+  font-feature-settings: "calt" 1;
+  line-height: 1.32;
+  text-align: left;
+  text-indent: 0;
+  letter-spacing: 0;
+  opacity: 0.93;
+  rotate: var(--mr, -1.6deg);
+  transform-origin: 0 0;
+  -webkit-user-select: none;
+  user-select: none;
+  pointer-events: none;
+}
+
+.margem[data-lado="esquerda"] {
+  left: auto;
+  right: calc(100% + 0.9em + var(--mx, 0em));
+  rotate: var(--mr, 1.2deg);
+  transform-origin: 100% 0;
+}
+
+/* Under the poem, after the last stanza. */
+.margem[data-lado="baixo"] {
+  left: var(--mx, 0em);
+  margin-top: calc(1.4em + var(--my, 0em));
+  width: var(--mw, 11em);
+  rotate: var(--mr, -1deg);
+}
+
+.mao-palavra {
+  display: inline-block;
+  rotate: var(--r);
+  translate: 0 var(--y);
+}
+
+.mao-riscado {
+  display: inline-block;
+  width: 1.1em;
+  height: 0.8em;
+  margin-inline: 0.05em 0.1em;
+  vertical-align: -0.06em;
+}
+
+.mao-riscado svg,
+.mao-seta {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: var(--caneta);
+}
+
+/* Beside the title: her arrow, then the note. */
+.titulo-linha {
+  position: relative;
+  display: inline-block;
+}
+
+/* It grows upwards, into the space beside the numeral, so a longer note
+   never runs into the first stanza. */
+.margem-titulo {
+  left: calc(100% + 0.5em);
+  top: auto;
+  bottom: -0.15em;
+  margin: 0;
+  width: auto;
+  rotate: -1deg;
+}
+
+.mao-seta {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 1.75em;
+  height: 1.4em;
+}
+
+.margem-titulo-texto {
+  display: block;
+  width: 5.6em;
+  margin: 0 0 0.75em 2.05em;
 }
 
 /* ---- Mensagem: cream cotton card, letterpress (ink pressed into the page) */
@@ -753,53 +880,94 @@
 /* ------------------------------------------------------ back of the sheet */
 
 .verso-folha {
-  font-family: var(--font-serif), Georgia, serif;
-  color: var(--cobalto);
+  font-family: var(--font-mao), "Segoe Print", "Bradley Hand", cursive;
+  font-feature-settings: "calt" 1;
+  color: var(--caneta);
   font-size: calc(var(--folha-w) / 27);
+  line-height: 1.3;
+}
+
+.verso-conteudo {
+  padding-top: 9%;
+  opacity: 0.93;
+}
+
+/* The back is all Laura's: her hand and her black pen, like a card she
+   wrote out. The book above, the title large, the day under it; then the
+   words she looked up, circled as in her book, and her reflection. Text
+   still waiting for her stays typed, so it never passes for hers. */
+.verso-cabecalho {
+  display: flex;
+  flex-direction: column;
+}
+
+.verso-livro {
+  order: -1;
+  margin: 0 0 0.25em;
+  font-size: 1em;
+  opacity: 0.55;
+  rotate: -0.8deg;
+}
+
+.verso-livro cite {
+  font-style: normal;
 }
 
 .verso-folha h3 {
   margin: 0;
-  font-size: 1em;
+  font-size: 1.95em;
   font-weight: 400;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  line-height: 1.05;
+  text-wrap: balance;
   outline: none;
+  rotate: -1.2deg;
+  transform-origin: 0 50%;
 }
 
 .verso-data {
-  margin: 0.5em 0 0;
-  font-size: 0.86em;
+  margin: 0.45em 0 0;
+  font-size: 1.05em;
+  opacity: 0.7;
 }
 
 .verso-folha h4 {
-  margin: 2.2em 0 0.7em;
-  font-size: 0.74em;
+  margin: 1.5em 0 0.7em;
+  font-size: 1.12em;
   font-weight: 400;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  opacity: 0.75;
+  opacity: 0.8;
 }
 
 .palavras {
   display: grid;
-  gap: 0.9em;
+  gap: 0.75em;
   margin: 0;
 }
 
 .palavras dt {
-  font-style: italic;
+  font-size: 1.15em;
+}
+
+/* Circled, like the words she looked up in the book. */
+.palavras dt .tinta {
+  margin-left: 0.3em;
 }
 
 .palavras dd {
-  margin: 0.1em 0 0;
-  font-size: 0.92em;
-  opacity: 0.86;
+  margin: 0.3em 0 0;
+  padding-left: 0.6em;
+  font-size: 1.02em;
+  rotate: -0.6deg;
 }
 
 .reflexao {
   margin: 0;
+  font-size: 1.08em;
+}
+
+.verso-folha .provisorio {
+  font-family: var(--font-serif), Georgia, serif;
   font-style: italic;
+  opacity: 0.6;
 }
 
 /* ------------------------------------------------------------- paper clip */
@@ -1597,16 +1765,50 @@
 
 /* ------------------------------------------------------- ink and notes */
 
-/* A word Laura marked: a stroke of cobalt pen under it, drawn on the HTML
-   text (never on the canvas). The stroke stretches with the word but keeps
-   its weight. */
+/* A word Laura marked, in her black felt-tip pen (components/desk/Mao.tsx):
+   a line under it, or a loop around it. The ink is an SVG over the HTML
+   text (never on the canvas); it stretches with the word but the pen keeps
+   its width. */
 .tinta {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 10' preserveAspectRatio='none'%3E%3Cpath d='M1.5 6.4C18 4.9 37 7.3 58 5.6S88 4.7 98.5 6' fill='none' stroke='%231d46a6' stroke-width='1.7' stroke-linecap='round' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
-  background-position: left bottom;
-  background-size: 100% 0.42em;
-  background-repeat: no-repeat;
-  -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
+  position: relative;
+}
+
+.tinta[data-como="circulo"] {
+  white-space: nowrap;
+}
+
+.risco {
+  position: absolute;
+  overflow: visible;
+  pointer-events: none;
+  fill: none;
+  stroke: var(--caneta);
+  stroke-width: 0.1em;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.92;
+}
+
+.risco path {
+  vector-effect: non-scaling-stroke;
+}
+
+.risco .risco-peso {
+  stroke-width: 0.13em;
+}
+
+.risco-sublinhado {
+  left: -0.08em;
+  bottom: -0.3em;
+  width: calc(100% + 0.18em);
+  height: 0.42em;
+}
+
+.risco-circulo {
+  left: -0.3em;
+  top: -0.14em;
+  width: calc(100% + 0.6em);
+  height: 1.6em;
 }
 
 /* With a note, the word is a button that still reads as a word of the verse. */
@@ -1651,7 +1853,14 @@
   width: 0.2em;
   height: 0.2em;
   border-radius: 50%;
-  background: var(--cobalto);
+  background: var(--caneta);
+  opacity: 0.85;
+}
+
+/* Circled, the dot sits outside the loop. */
+.tinta-nota[data-como="circulo"]::after {
+  top: -0.12em;
+  right: -0.5em;
 }
 
 /* A finger-sized target around the word, without moving the text. */
@@ -1694,7 +1903,10 @@
   border: 1px solid rgb(60 40 20 / 0.12);
   border-radius: 3px;
   background: #f6efdf;
-  color: var(--cobalto);
+  /* A slip she wrote on, in her hand. */
+  color: var(--caneta);
+  font-family: var(--font-mao), "Segoe Print", "Bradley Hand", cursive;
+  font-feature-settings: "calt" 1;
   box-shadow:
     0 1px 2px rgb(20 10 4 / 0.2),
     0 8px 22px rgb(20 10 4 / 0.28);
@@ -1729,16 +1941,15 @@
 }
 
 .nota-palavra {
-  margin: 0 0 0.4em;
-  color: rgb(29 70 166 / 0.72);
-  font-size: 0.7rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+  margin: 0 0 0.25em;
+  font-size: 1.15rem;
+  opacity: 0.6;
 }
 
 .nota-texto {
   margin: 0;
-  font-style: italic;
+  font-size: 1.15rem;
+  line-height: 1.3;
   white-space: pre-line;
 }
 

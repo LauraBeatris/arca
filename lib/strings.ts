@@ -104,6 +104,8 @@ const pt = {
 
   // A word Laura marked with a note in the margin.
   noteOn: (word: string) => `Nota sobre “${word}”`,
+  handNote: "Nota à mão da Laura:",
+  crossedOut: "palavra riscada",
   closeNote: "Fechar nota",
 
   notFoundTitle: "Esta folha não está na arca.",
@@ -241,6 +243,8 @@ const en: Strings = {
   },
 
   noteOn: (word) => `Note on “${word}”`,
+  handNote: "Laura’s handwritten note:",
+  crossedOut: "word crossed out",
   closeNote: "Close note",
 
   notFoundTitle: "This sheet isn’t in the Arca.",

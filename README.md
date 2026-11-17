@@ -86,6 +86,16 @@ three dashes start a new sheet.
 long poems are held by a paper clip.
 ```
 
+my marks go in the poem too, in my own pen and handwriting (a font made from photos of my notes, see `scripts/letra/`):
+
+```mdx
+Soas-me na <Mark>alma distante</Mark>.
+Por mais que me <Mark como="circulo" note="de tanger: fazer soar">tanjas</Mark> perto
+Sem existir nos bastou.<Margem largura={5}>será que algo precisa <Risco /> acontecer…</Margem>
+```
+
+`titleNote: …` in the frontmatter writes a note beside the title, with an arrow.
+
 <br>
 
 ## made with

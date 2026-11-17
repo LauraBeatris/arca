@@ -24,6 +24,8 @@ import { FACSIMILE_HOSTS } from "@/lib/facsimiles";
  *   paper       "carta" | "maquina", optional (overrides the book's paper)
  *   markedAt    "YYYY-MM-DD", the day Laura marked the poem
  *   source      URL the text was taken from, optional
+ *   titleNote   string, optional: Laura's note beside the title, in her hand,
+ *               reached by her arrow
  *   words       list of { word, meaning }
  *   reflection  string
  *   facsimile   optional, a scan of Pessoa's own page, shown on the back:
@@ -35,6 +37,8 @@ import { FACSIMILE_HOSTS } from "@/lib/facsimiles";
  *
  * Body: one stanza per paragraph, one line of verse per line. A line holding
  * only `---` starts a new sheet; a poem with several sheets is held by a clip.
+ * Laura's marks and handwritten notes go in the body too (components/mdx.tsx:
+ * `<Mark>`, `<Margem>`, `<Risco />`); notes are left out of the poem's text.
  */
 
 export type Word = { word: string; meaning: string };
@@ -50,6 +54,7 @@ export type PoemMeta = {
   paper: PaperId;
   markedAt: string;
   source?: string;
+  titleNote?: string;
   words: Word[];
   reflection: string;
   facsimile?: Facsimile;
@@ -71,6 +76,11 @@ const POEMS_DIR = path.join(process.cwd(), "content", "poems");
 const PUBLIC_DIR = path.join(process.cwd(), "public");
 const IMAGE_FILE = /\.(jpe?g|png|webp|avif)$/i;
 const SHEET_BREAK = /^[ \t]*---[ \t]*$/m;
+/** Laura's handwritten notes: not part of the poem's text. */
+const NOTES = /<Margem\b[^>]*\/>|<Margem\b[\s\S]*?<\/Margem>/g;
+
+/** The verse without markup: tags dropped, notes dropped with their words. */
+const plainVerse = (source: string) => source.replace(NOTES, "").replace(/<[^>]+>/g, "");
 
 function fail(file: string, message: string): never {
   throw new Error(`content/poems/${file}: ${message}`);
@@ -162,6 +172,9 @@ function readPoem(file: string): Poem {
     fail(file, "`markedAt` must be a date written as YYYY-MM-DD");
   }
   const facsimile = readFacsimile(file, slug, data.facsimile);
+  if (data.titleNote !== undefined && (typeof data.titleNote !== "string" || !data.titleNote.trim())) {
+    fail(file, "`titleNote`, when given, must be text");
+  }
   const words: Word[] = Array.isArray(data.words)
     ? data.words.map((entry: Partial<Word>) => ({
         word: String(entry?.word ?? ""),
@@ -178,8 +191,7 @@ function readPoem(file: string): Poem {
     return <Content key={i} components={mdxComponents} />;
   });
   const sheetLines = sources.map((source) =>
-    source
-      .replace(/<[^>]+>/g, "")
+    plainVerse(source)
       .split("\n")
       .map((line) => line.trim())
       .filter(Boolean),
@@ -195,6 +207,7 @@ function readPoem(file: string): Poem {
     paper: (data.paper as PaperId | undefined) ?? BOOK_PAPER[book],
     markedAt,
     source: data.source ? String(data.source) : undefined,
+    titleNote: typeof data.titleNote === "string" ? data.titleNote.trim() : undefined,
     words,
     reflection: String(data.reflection ?? ""),
     facsimile,
@@ -202,8 +215,7 @@ function readPoem(file: string): Poem {
     sheets,
     lines: sheetLines.flat(),
     sheetLines,
-    text: content
-      .replace(/<[^>]+>/g, "")
+    text: plainVerse(content)
       .split("\n")
       .map((line) => (SHEET_BREAK.test(line) ? "" : line.trim()))
       .join("\n")

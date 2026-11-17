@@ -85,10 +85,16 @@ const nothing = () => null;
 export function NotedMark({
   word,
   note,
+  como,
+  ink,
   children,
 }: {
   word: string;
   note: string;
+  /** How the word is marked: underlined or circled (see Mao.tsx). */
+  como: string;
+  /** The pen's mark, drawn around the word. */
+  ink: ReactNode;
   children: ReactNode;
 }) {
   const t = useStrings();
@@ -107,6 +113,7 @@ export function NotedMark({
       // pile the word is just part of a sheet you can drag.
       tabIndex={isLive ? 0 : -1}
       data-nota-id={id}
+      data-como={como}
       data-viva={isLive || undefined}
       onClick={(event) => {
         if (!notes.isLive(id)) return;
@@ -121,6 +128,7 @@ export function NotedMark({
       }}
     >
       <span lang="pt">{children}</span>
+      {ink}
     </button>
   );
 }
