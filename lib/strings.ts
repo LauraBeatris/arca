@@ -102,6 +102,10 @@ const pt = {
     putDown: { keys: ["Escape"], label: "esc" },
   },
 
+  // A word Laura marked with a note in the margin.
+  noteOn: (word: string) => `Nota sobre “${word}”`,
+  closeNote: "Fechar nota",
+
   notFoundTitle: "Esta folha não está na arca.",
   notFoundBack: "Voltar à pilha",
 
@@ -235,6 +239,9 @@ const en: Strings = {
     next: { keys: ["ArrowRight", "ArrowDown"], label: "→" },
     putDown: { keys: ["Escape"], label: "esc" },
   },
+
+  noteOn: (word) => `Note on “${word}”`,
+  closeNote: "Close note",
 
   notFoundTitle: "This sheet isn’t in the Arca.",
   notFoundBack: "Back to the pile",
