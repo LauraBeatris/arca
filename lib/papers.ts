@@ -61,5 +61,28 @@ export const BOOK_PAPER: Record<Book, PaperId> = {
   cancioneiro: "maquina",
 };
 
+/**
+ * Each book's light in the room, set by the sheet on top of the pile (or the
+ * one picked up). Both are multipliers on the shared lighting (1 = as is),
+ * kept close to 1: the change should be felt rather than noticed.
+ *
+ * The lamp tints are balanced so the paper under the text never gets darker
+ * (measured on every poem, on the pile and picked up): the ink keeps its
+ * contrast. Only the desk around the pile is allowed to dim.
+ */
+export type Ambience = {
+  /** Lamp colour, RGB multiplier. */
+  lamp: [number, number, number];
+  /** Desk colour and exposure, RGB multiplier. */
+  desk: [number, number, number];
+};
+
+export const BOOK_AMBIENCE: Record<Book, Ambience> = {
+  // Mensagem: the heraldic, epic book. A warmer, more golden lamp.
+  mensagem: { lamp: [1.04, 1.0, 0.9], desk: [1.03, 1.0, 0.93] },
+  // Cancioneiro: lyrical and intimate. A slightly cooler lamp, a dimmer desk.
+  cancioneiro: { lamp: [0.98, 1.02, 1.06], desk: [0.92, 0.93, 0.96] },
+};
+
 export const BOOKS: Book[] = ["mensagem", "cancioneiro"];
 export const PAPER_IDS = Object.keys(PAPERS) as PaperId[];
