@@ -1162,9 +1162,18 @@
   opacity: 0.74;
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
+  /* A link you press, not words to copy: holding it never selects "built by". */
+  -webkit-user-select: none;
+  user-select: none;
   transition:
     opacity 0.4s ease,
     visibility 0s linear 0s;
+}
+
+/* A finger gets the same answer a hovering pointer does. */
+.assinatura:active {
+  opacity: 1;
+  transition-duration: 0s;
 }
 
 .assinatura:focus-visible {
@@ -1947,6 +1956,8 @@
   }
 }
 
+/* Pressed (a finger has no hover to warn it) or open: the word is tinted. */
+.tinta-nota[data-viva]:active,
 .tinta-nota[aria-expanded="true"] {
   background-color: rgb(29 70 166 / 0.14);
 }
@@ -2090,11 +2101,52 @@
   animation: none;
 }
 
+/* Closed with a pointer, the slip leaves the way it came, quicker than it
+   arrived: back toward the word, or down off the screen. A key closes it
+   at once (no data-saindo). */
+.nota-margem[data-saindo] {
+  pointer-events: none;
+  animation: nota-sai 150ms var(--ease-out) forwards;
+}
+
+.nota-margem[data-saindo][data-lado="left"] {
+  animation-name: nota-sai-esquerda;
+}
+
+.nota-margem[data-saindo][data-modo="baixo"] {
+  animation: nota-desce 200ms var(--ease-out) forwards;
+}
+
+@keyframes nota-sai {
+  to {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+}
+
+@keyframes nota-sai-esquerda {
+  to {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+}
+
+@keyframes nota-desce {
+  to {
+    transform: translateY(calc(100% + 24px));
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .nota-margem,
   .nota-margem[data-lado="left"],
   .nota-margem[data-modo="baixo"] {
     animation: nota-aparece 200ms ease;
+  }
+  .nota-margem[data-saindo],
+  .nota-margem[data-saindo][data-lado="left"],
+  .nota-margem[data-saindo][data-modo="baixo"] {
+    animation: nota-esvai 150ms ease forwards;
   }
   .tinta-nota,
   .nota-fechar {
@@ -2104,6 +2156,12 @@
 
 @keyframes nota-aparece {
   from {
+    opacity: 0;
+  }
+}
+
+@keyframes nota-esvai {
+  to {
     opacity: 0;
   }
 }

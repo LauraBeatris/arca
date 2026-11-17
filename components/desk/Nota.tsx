@@ -42,6 +42,8 @@ type OpenNote = {
 /* ------------------------------------------------------------------ store */
 
 let open: OpenNote | null = null;
+/** The slip on its way out after a pointer closed it (keys close at once). */
+let leaving: OpenNote | null = null;
 /** The marks on the page being read: the only ones that can be pressed. */
 let live = new Set<string>();
 const listeners = new Set<() => void>();
@@ -53,18 +55,29 @@ const notes = {
     return () => listeners.delete(listener);
   },
   current: () => open,
+  leaving: () => leaving,
   isOpen: (id: string) => open?.id === id,
   isLive: (id: string) => live.has(id),
   toggle(next: OpenNote) {
-    open = open?.id === next.id ? null : next;
+    if (open?.id === next.id) return notes.close(false, !next.instant);
+    open = next;
+    leaving = null;
     emit();
   },
-  close(returnFocus: boolean) {
+  /** `gently`: the slip leaves the way it came (a pointer closed it). */
+  close(returnFocus: boolean, gently = false) {
     const was = open;
     if (!was) return;
     open = null;
+    leaving = gently ? was : null;
     emit();
     if (returnFocus && was.button.isConnected) was.button.focus({ preventScroll: true });
+  },
+  /** The slip has left. */
+  gone(note: OpenNote) {
+    if (leaving !== note) return;
+    leaving = null;
+    emit();
   },
   setLive(ids: Set<string>) {
     live = ids;
@@ -158,9 +171,13 @@ export function MarginNote({
 }) {
   const t = useStrings();
   const note = useSyncExternalStore(notes.subscribe, notes.current, nothing);
+  const leaving = useSyncExternalStore(notes.subscribe, notes.leaving, nothing);
+  // Closed by a pointer, the slip stays where it stood while it leaves.
+  const shown = note ?? leaving;
+  const exiting = !note && !!leaving;
   const slipRef = useRef<HTMLDivElement>(null);
   const [measured, setPlace] = useState<Place | null>(null);
-  const place = measured && measured.for === note ? measured : null;
+  const place = measured && measured.for === shown ? measured : null;
   const slug = poem?.slug ?? null;
 
   // The marks on the sheet in view become pressable; any other slip closes.
@@ -248,7 +265,9 @@ export function MarginNote({
       const el = e.target as Node | null;
       // The word that opened it toggles it itself.
       if (slip?.contains(el) || note.button.contains(el)) return;
-      notes.close(false);
+      // Another of her notes: the slip moves to it without leaving first.
+      const other = el instanceof Element && el.closest(".tinta-nota[data-viva]");
+      notes.close(false, !other);
     };
     // Capture, so Escape closes the slip before the desk sees it and puts
     // the sheet down; the desk skips keys that were already handled.
@@ -282,6 +301,13 @@ export function MarginNote({
     };
   }, [note]);
 
+  // Gone once its exit has played (or at once, if it never stood anywhere).
+  useEffect(() => {
+    if (!exiting || !leaving) return;
+    const timer = setTimeout(() => notes.gone(leaving), place ? 400 : 0);
+    return () => clearTimeout(timer);
+  }, [exiting, leaving, place]);
+
   /* -------------------------------------------------------------- render */
 
   return (
@@ -293,7 +319,9 @@ export function MarginNote({
       lang={t.lang}
       aria-label={note ? t.noteOn(note.word) : undefined}
       tabIndex={-1}
-      hidden={!note}
+      hidden={!shown}
+      inert={exiting || undefined}
+      data-saindo={exiting || undefined}
       data-modo={place?.mode}
       data-lado={place?.mode === "margem" ? place.side : undefined}
       data-instantaneo={note?.instant || undefined}
@@ -304,21 +332,25 @@ export function MarginNote({
           visibility: place ? "visible" : "hidden",
         } as CSSProperties
       }
+      onAnimationEnd={(e) => {
+        if (exiting && leaving && e.target === e.currentTarget) notes.gone(leaving);
+      }}
     >
-      {note && (
+      {shown && (
         <>
           <p className="nota-palavra" lang="pt">
-            {note.word}
+            {shown.word}
           </p>
           <p className="nota-texto" lang="pt">
-            {note.note}
+            {shown.note}
           </p>
           <button
             type="button"
             className="nota-fechar"
             aria-label={t.closeNote}
             title={t.closeNote}
-            onClick={() => notes.close(true)}
+            // A click with detail 0 came from Enter or Space: no exit.
+            onClick={(event) => notes.close(true, event.detail !== 0)}
           >
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
               <path d="M7 7l10 10M17 7L7 17" />
