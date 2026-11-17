@@ -497,9 +497,10 @@
   -webkit-touch-callout: none;
 }
 
-/* Picked up, it is something you read: the text can be selected. */
-.poema[data-pegado] .folha,
-.poema[data-pegado] .verso-folha {
+/* Picked up, it is something you read: the text can be selected. The back
+   is Laura's handwriting, not something to quote, so it is not; the whole
+   of it is paper you take hold of to turn. */
+.poema[data-pegado] .folha {
   -webkit-user-select: text;
   user-select: text;
 }
@@ -517,10 +518,6 @@
       .cabecalho h2,
       .numeral,
       .rodape p,
-      .verso-conteudo h3,
-      .verso-conteudo h4,
-      .verso-conteudo p,
-      .palavras
     ) {
     cursor: text;
   }
@@ -694,11 +691,14 @@
   white-space: nowrap;
 }
 
-.marcado,
-.verso-data {
-  color: var(--cobalto);
-  font-family: var(--font-serif), Georgia, serif;
-  font-style: italic;
+/* The day she marked it, in her hand. */
+.marcado {
+  color: var(--caneta);
+  font-family: var(--font-mao), "Segoe Print", "Bradley Hand", cursive;
+  font-size: 1.55em;
+  font-feature-settings: "calt" 1;
+  letter-spacing: 0;
+  opacity: 0.9;
 }
 
 .livro {
@@ -880,27 +880,33 @@
 /* ------------------------------------------------------ back of the sheet */
 
 .verso-folha {
-  font-family: var(--font-serif), Georgia, serif;
-  color: var(--cobalto);
+  font-family: var(--font-mao), "Segoe Print", "Bradley Hand", cursive;
+  font-feature-settings: "calt" 1;
+  color: var(--caneta);
   font-size: calc(var(--folha-w) / 27);
+  line-height: 1.3;
 }
 
-/* The back reads like an index card: the book above, the title set large
-   in its own case, the date under it, a hairline, then the sections. */
+.verso-conteudo {
+  padding-top: 9%;
+  opacity: 0.93;
+}
+
+/* The back is all Laura's: her hand and her black pen, like a card she
+   wrote out. The book above, the title large, the day under it; then the
+   words she looked up, circled as in her book, and her reflection. Text
+   still waiting for her stays typed, so it never passes for hers. */
 .verso-cabecalho {
   display: flex;
   flex-direction: column;
-  padding-bottom: 1.1em;
-  border-bottom: 1px solid rgb(29 70 166 / 0.22);
 }
 
 .verso-livro {
   order: -1;
-  margin: 0 0 0.55em;
-  font-size: 0.84em;
-  font-variant-caps: all-small-caps;
-  letter-spacing: 0.14em;
-  opacity: 0.72;
+  margin: 0 0 0.25em;
+  font-size: 1em;
+  opacity: 0.55;
+  rotate: -0.8deg;
 }
 
 .verso-livro cite {
@@ -909,91 +915,57 @@
 
 .verso-folha h3 {
   margin: 0;
-  font-size: 1.62em;
+  font-size: 1.95em;
   font-weight: 400;
-  line-height: 1.12;
-  letter-spacing: -0.005em;
+  line-height: 1.05;
   text-wrap: balance;
   outline: none;
+  rotate: -1.2deg;
+  transform-origin: 0 50%;
 }
 
 .verso-data {
-  margin: 0.55em 0 0;
-  font-size: 0.84em;
-  opacity: 0.78;
+  margin: 0.45em 0 0;
+  font-size: 1.05em;
+  opacity: 0.7;
 }
 
-/* Section labels: small capitals, with a ruled line running on to the
-   edge, as on a printed card. */
 .verso-folha h4 {
-  display: flex;
-  align-items: center;
-  gap: 0.7em;
-  margin: 1.9em 0 0.9em;
-  font-size: 0.9em;
+  margin: 1.5em 0 0.7em;
+  font-size: 1.12em;
   font-weight: 400;
-  font-variant-caps: all-small-caps;
-  letter-spacing: 0.15em;
-  opacity: 0.85;
-}
-
-.verso-folha h4::after {
-  content: "";
-  flex: 1;
-  height: 1px;
-  background: currentColor;
-  opacity: 0.28;
+  opacity: 0.8;
 }
 
 .palavras {
   display: grid;
-  gap: 0.9em;
+  gap: 0.75em;
   margin: 0;
 }
 
 .palavras dt {
-  font-style: italic;
+  font-size: 1.15em;
+}
+
+/* Circled, like the words she looked up in the book. */
+.palavras dt .tinta {
+  margin-left: 0.3em;
 }
 
 .palavras dd {
-  margin: 0.1em 0 0;
-  font-size: 0.92em;
-  opacity: 0.86;
+  margin: 0.3em 0 0;
+  padding-left: 0.6em;
+  font-size: 1.02em;
+  rotate: -0.6deg;
 }
 
 .reflexao {
   margin: 0;
-  font-style: italic;
-}
-
-/* What Laura wrote on the back, in her hand and her black pen, like the
-   notes on the front. Placeholders stay typed, so they never pass for hers. */
-.verso-folha .mao {
-  color: var(--caneta);
-  font-family: var(--font-mao), "Segoe Print", "Bradley Hand", cursive;
-  font-style: normal;
-  font-feature-settings: "calt" 1;
-  line-height: 1.3;
-  opacity: 0.93;
-}
-
-.palavras dt.mao {
-  font-size: 1.22em;
-}
-
-.palavras dd.mao {
-  margin-top: 0.4em;
-  padding-left: 0.6em;
   font-size: 1.08em;
-  opacity: 0.93;
-  rotate: -0.6deg;
-}
-
-.reflexao.mao {
-  font-size: 1.15em;
 }
 
 .verso-folha .provisorio {
+  font-family: var(--font-serif), Georgia, serif;
   font-style: italic;
   opacity: 0.6;
 }
@@ -1931,7 +1903,10 @@
   border: 1px solid rgb(60 40 20 / 0.12);
   border-radius: 3px;
   background: #f6efdf;
-  color: var(--cobalto);
+  /* A slip she wrote on, in her hand. */
+  color: var(--caneta);
+  font-family: var(--font-mao), "Segoe Print", "Bradley Hand", cursive;
+  font-feature-settings: "calt" 1;
   box-shadow:
     0 1px 2px rgb(20 10 4 / 0.2),
     0 8px 22px rgb(20 10 4 / 0.28);
@@ -1966,16 +1941,15 @@
 }
 
 .nota-palavra {
-  margin: 0 0 0.4em;
-  color: rgb(29 70 166 / 0.72);
-  font-size: 0.7rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+  margin: 0 0 0.25em;
+  font-size: 1.15rem;
+  opacity: 0.6;
 }
 
 .nota-texto {
   margin: 0;
-  font-style: italic;
+  font-size: 1.15rem;
+  line-height: 1.3;
   white-space: pre-line;
 }
 

@@ -14,9 +14,10 @@ letter in the font is one she wrote; nothing is drawn by hand afterwards.
   baseline and x-height, and builds the font. A letter with several sources
   gets alternates that take turns (`calt`), so repeated letters differ.
 
-Letters she has not written yet are composed from ones she has (h, k, w, y,
-the accents) or missing (digits, capitals other than F, which fall back to
-lowercase). To add some: crop a new photo into `fotos/`, add it to `names` in
+Letters she has not written yet are composed from her strokes (h, k, w, y,
+the accents, and the digits: her o, her i, her question mark, z, s, q and
+the 8-shaped g of "algo"). Capitals other than F fall back to lowercase,
+as in her notes. To add some: crop a new photo into `fotos/`, add it to `names` in
 `cc.py` and to `CROPS` and `LINES` in `build.py`, run `cc.py`, look at
 `gerado/<crop>_cc.png` for the numbers, add them to `SRC`, run `build.py`.
 

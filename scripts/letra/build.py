@@ -193,7 +193,33 @@ traced["quoteright"]=[place(comma,x=0,bottom=560,sx=0.8,sy=0.8)]
 traced["period"]=[place(per,x=0,y=0)]
 traced["comma"]=[place(comma,x=0,top=110)]
 
+# Digits: she has written none yet, so each is made from one of her strokes:
+# her round o (0), the stroke of her i (1), her question mark, which she
+# writes like a 7 (7, and 2 with a base), her z, which looks like a 3 (3),
+# her heavy s that looks like a 5 (5), her q (9), the
+# two loops of the g in "algo" (8), and three of her strokes for the 4.
+def digit(rec, height=660, bottom=0, sx=1.0):
+    b=bounds(rec); k=height/(b[3]-b[1])
+    return place(rec, x=0, bottom=bottom, sx=k*sx, sy=k)
+hook=trace_source("S",[51]); zed=traced["z"][0]; qq=trace_source("U",[1])
+stem=traced["i0"][0]; slash=trace_source("T",[17])
+traced["zero"]=[digit(traced["o"][0], 600, sx=0.8)]
+traced["one"]=[digit(stem, 660)]
+seven=digit(hook, 660); sb=bounds(seven)
+traced["seven"]=[seven]
+traced["two"]=[merge(seven, place(bar, x=sb[0]-10, bottom=-10, sx=(sb[2]-sb[0]+40)/(bounds(bar)[2]-bounds(bar)[0])))]
+traced["three"]=[digit(zed, 720, bottom=-60)]
+traced["five"]=[digit(trace_source("S",[31]), 640)]
+traced["six"]=[digit(xf(traced["g"][0],-1,0,0,-1,0,0), 680)]
+traced["eight"]=[digit(trace_source("U",[4,6]), 660, sx=0.85)]
+traced["nine"]=[digit(qq, 720, bottom=-60)]
+st4=digit(stem, 700, bottom=-20); s4=bounds(st4)
+left=digit(stem, 420, bottom=240)
+cross=place(bar, x=s4[0]-240, bottom=220, sx=(s4[2]-s4[0]+320)/(bounds(bar)[2]-bounds(bar)[0]))
+traced["four"]=[merge(st4, cross, place(left, x=s4[0]-230, bottom=240))]
+
 CMAP = {c:c for c in "abcdeghijklmnopqrstuvwxyz"}
+CMAP.update({str(i):n for i,n in enumerate(["zero","one","two","three","four","five","six","seven","eight","nine"])})
 CMAP.update({"F":"F","f":"F"})
 for c in "ABCDEGHIJKLMNOPQRSTUVWXYZ": CMAP[c]=c.lower()
 CMAP.update({"á":"aacute","à":"agrave","â":"acircumflex","ã":"atilde","é":"eacute","ê":"ecircumflex",

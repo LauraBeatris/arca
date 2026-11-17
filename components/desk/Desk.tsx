@@ -577,7 +577,7 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
                         <span className="sr-only" lang={t.lang}>
                           {t.backPrefix}{" "}
                         </span>
-                        {poem.title}
+                        <Escrita seed={poem.title}>{poem.title}</Escrita>
                       </h3>
                       {/* Shown above the title; read after it. */}
                       <p className="verso-livro" lang={t.lang}>
@@ -591,8 +591,10 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
                         )}
                       </p>
                       <p className="verso-data" lang={t.lang}>
-                        {t.markedOn}{" "}
-                        <time dateTime={poem.markedAt}>{formatDate(poem.markedAt, t)}</time>
+                        <Escrita seed={`${poem.slug}:data`}>{t.markedOn}</Escrita>{" "}
+                        <time dateTime={poem.markedAt}>
+                          <Escrita seed={poem.markedAt}>{formatDate(poem.markedAt, t)}</Escrita>
+                        </time>
                       </p>
                     </header>
                     {poem.facsimile && (
@@ -602,7 +604,12 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
                         active={isPicked}
                       />
                     )}
-                    <h4 lang={t.lang}>{t.wordsHeading}</h4>
+                    <h4 lang={t.lang}>
+                      <span className="tinta">
+                        {t.wordsHeading}
+                        <Tinta como="sublinhado" seed={t.wordsHeading} />
+                      </span>
+                    </h4>
                     <dl className="palavras">
                       {poem.words.map((entry, k) => (
                         <div key={k}>
@@ -611,9 +618,9 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
                             {provisional(entry.word) ? (
                               entry.word
                             ) : (
-                              <span className="tinta">
+                              <span className="tinta" data-como="circulo">
                                 <Escrita seed={entry.word}>{entry.word}</Escrita>
-                                <Tinta como="sublinhado" seed={entry.word} />
+                                <Tinta como="circulo" seed={entry.word} />
                               </span>
                             )}
                           </dt>
@@ -627,7 +634,12 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
                         </div>
                       ))}
                     </dl>
-                    <h4 lang={t.lang}>{t.reflectionHeading}</h4>
+                    <h4 lang={t.lang}>
+                      <span className="tinta">
+                        {t.reflectionHeading}
+                        <Tinta como="sublinhado" seed={t.reflectionHeading} />
+                      </span>
+                    </h4>
                     {provisional(poem.reflection) ? (
                       <p className="reflexao provisorio">{poem.reflection}</p>
                     ) : (

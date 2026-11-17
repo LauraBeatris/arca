@@ -907,7 +907,7 @@ export class DeskEngine {
     const l = this.leaf;
     if (l && l.id === e.pointerId) {
       this.leaf = null;
-      this.leafed(e.clientX - l.x, e.clientY - l.y, e.timeStamp - l.t, 40);
+      this.leafed(e.clientX - l.x, e.clientY - l.y, e.timeStamp - l.t, 60, Infinity);
     }
     const b = this.backdrop;
     if (b && b.id === e.pointerId) {
@@ -951,22 +951,27 @@ export class DeskEngine {
     this.invalidate();
   };
 
-  /** Paper with no words on it: the margins of a picked-up sheet. */
+  /**
+   * Somewhere a mouse can take hold of a picked-up sheet to leaf it: the
+   * margins of the front (its words are for selecting), or anywhere on the
+   * back, which cannot be selected.
+   */
   private isBarePaper(target: EventTarget | null): boolean {
-    if (!(target instanceof Element)) return false;
-    return !target.closest(
-      ".verso, .cabecalho h2, .numeral, .rodape p, .margem, .tinta, a, button, " +
-        ".verso-conteudo h3, .verso-conteudo h4, .verso-conteudo p, .palavras, figure",
-    );
+    if (!(target instanceof Element) || target.closest("a, button, figure")) return false;
+    if (target.closest(".verso-folha")) return true;
+    return !target.closest(".verso, .cabecalho h2, .numeral, .rodape p, .margem, .tinta");
   }
 
   /**
    * A sideways movement on a picked-up sheet leafs it, if it was clearly
-   * sideways, quick, and not someone selecting words.
+   * sideways, not someone selecting words, and (for a finger, which might be
+   * scrolling) quick. A mouse holding the paper may take its time.
    */
-  private leafed(dx: number, dy: number, ms: number, min: number) {
-    const selecting = !window.getSelection()?.isCollapsed;
-    if (!this.view.picked || selecting || ms > 700) return;
+  private leafed(dx: number, dy: number, ms: number, min: number, maxMs = 700) {
+    // Words picked out by the drag (the back cannot be selected, but a click
+    // there can still leave an empty range behind).
+    const selecting = !!window.getSelection()?.toString().trim();
+    if (!this.view.picked || selecting || ms > maxMs) return;
     if (Math.abs(dx) > min && Math.abs(dx) > Math.abs(dy) * 1.8) {
       this.events.onPage(dx < 0 ? 1 : -1);
     }

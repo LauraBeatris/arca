@@ -24,8 +24,8 @@ it; `<Margem>…</Margem>` at the end of a line is a note in her handwriting
 beside that line (`lado="baixo"` on its own paragraph: under the poem; `x`,
 `y`, `largura`, `inclina` in ems/degrees place it); `<Risco />` is a word she
 scribbled out. Her handwriting is a font made from photos of her notes
-(`app/fonts/laura-mao.woff2`, built by `scripts/letra/`); it has no digits,
-so write notes without them. A poem whose frontmatter says `RASCUNHO` has
+(`app/fonts/laura-mao.woff2`, built by `scripts/letra/`); the back of each
+sheet and the day it was marked are written in it too. A poem whose frontmatter says `RASCUNHO` has
 marks written by Claude, not Laura, waiting for her to review.
 
 Where things live:
