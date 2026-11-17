@@ -30,6 +30,7 @@ import { DeskEngine, type View } from "./engine";
 import { Assinatura } from "./Assinatura";
 import { FacsimileFigure, type DeskFacsimile } from "./Facsimile";
 import { Marca } from "./Marca";
+import { NotaTitulo } from "./Mao";
 import { MarginNote } from "./Nota";
 import { SelectionMenu, type SelectionMenuHandle } from "./SelectionMenu";
 import { DeskSound, SOUNDS, makeNoise, playRecipe, preloadSounds, type SoundId } from "./sound";
@@ -478,30 +479,33 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
                       {j === 0 && (
                         <div className="cabecalho">
                           {poem.numeral && <p className="numeral">{poem.numeral}</p>}
-                          <h2
-                            id={`titulo-${poem.slug}`}
-                            tabIndex={-1}
-                            ref={(el) => {
-                              if (el) headings.current.set(poem.slug, el);
-                              else headings.current.delete(poem.slug);
-                            }}
-                          >
-                            {isPicked ? (
-                              poem.title
-                            ) : (
-                              <a
-                                href={poemPath(lang, poem.slug)}
-                                tabIndex={rank === 0 ? 0 : -1}
-                                draggable={false}
-                                onClick={(event) => {
-                                  event.preventDefault();
-                                  pickUp(i);
-                                }}
-                              >
-                                {poem.title}
-                              </a>
-                            )}
-                          </h2>
+                          <div className="titulo-linha">
+                            <h2
+                              id={`titulo-${poem.slug}`}
+                              tabIndex={-1}
+                              ref={(el) => {
+                                if (el) headings.current.set(poem.slug, el);
+                                else headings.current.delete(poem.slug);
+                              }}
+                            >
+                              {isPicked ? (
+                                poem.title
+                              ) : (
+                                <a
+                                  href={poemPath(lang, poem.slug)}
+                                  tabIndex={rank === 0 ? 0 : -1}
+                                  draggable={false}
+                                  onClick={(event) => {
+                                    event.preventDefault();
+                                    pickUp(i);
+                                  }}
+                                >
+                                  {poem.title}
+                                </a>
+                              )}
+                            </h2>
+                            {poem.titleNote && <NotaTitulo text={poem.titleNote} />}
+                          </div>
                         </div>
                       )}
                       <div className="versos">{sheet}</div>

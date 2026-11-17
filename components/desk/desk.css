@@ -504,6 +504,11 @@
   user-select: text;
 }
 
+/* Ink stops at the paper's edge. */
+.folha-conteudo {
+  overflow: clip;
+}
+
 .folha-conteudo,
 .verso-conteudo {
   position: absolute;
@@ -558,6 +563,7 @@
 }
 
 .versos {
+  position: relative;
   width: fit-content;
   max-width: 100%;
   margin-inline: auto;
@@ -685,6 +691,105 @@
   left: 0;
   text-align: center;
   opacity: 0.7;
+}
+
+/* ------------------------------------------------- Laura's hand */
+
+/* Notes in her handwriting, beside a line or under the poem. Each one is
+   placed where the line before it sits (its static position), then moved
+   into the margin. Real text, but outside the verse and not selectable with
+   it, and lit like ink lying on the paper, not pressed into it. */
+.margem {
+  position: absolute;
+  display: block;
+  left: calc(100% + 0.9em + var(--mx, 0em));
+  margin-top: calc(-1.5em + var(--my, 0em));
+  width: var(--mw, 7em);
+  color: var(--caneta);
+  -webkit-text-fill-color: var(--caneta);
+  background: none;
+  text-shadow: none;
+  font-family: var(--font-mao), "Segoe Print", "Bradley Hand", cursive;
+  font-size: 1.05em;
+  font-feature-settings: "calt" 1;
+  line-height: 1.32;
+  text-align: left;
+  text-indent: 0;
+  letter-spacing: 0;
+  opacity: 0.93;
+  rotate: var(--mr, -1.6deg);
+  transform-origin: 0 0;
+  -webkit-user-select: none;
+  user-select: none;
+  pointer-events: none;
+}
+
+.margem[data-lado="esquerda"] {
+  left: auto;
+  right: calc(100% + 0.9em + var(--mx, 0em));
+  rotate: var(--mr, 1.2deg);
+  transform-origin: 100% 0;
+}
+
+/* Under the poem, after the last stanza. */
+.margem[data-lado="baixo"] {
+  left: var(--mx, 0em);
+  margin-top: calc(1.4em + var(--my, 0em));
+  width: var(--mw, 11em);
+  rotate: var(--mr, -1deg);
+}
+
+.mao-palavra {
+  display: inline-block;
+  rotate: var(--r);
+  translate: 0 var(--y);
+}
+
+.mao-riscado {
+  display: inline-block;
+  width: 1.1em;
+  height: 0.8em;
+  margin-inline: 0.05em 0.1em;
+  vertical-align: -0.06em;
+}
+
+.mao-riscado svg,
+.mao-seta {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: var(--caneta);
+}
+
+/* Beside the title: her arrow, then the note. */
+.titulo-linha {
+  position: relative;
+  display: inline-block;
+}
+
+/* It grows upwards, into the space beside the numeral, so a longer note
+   never runs into the first stanza. */
+.margem-titulo {
+  left: calc(100% + 0.5em);
+  top: auto;
+  bottom: -0.15em;
+  margin: 0;
+  width: auto;
+  rotate: -1deg;
+}
+
+.mao-seta {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 1.75em;
+  height: 1.4em;
+}
+
+.margem-titulo-texto {
+  display: block;
+  width: 5.6em;
+  margin: 0 0 0.75em 2.05em;
 }
 
 /* ---- Mensagem: cream cotton card, letterpress (ink pressed into the page) */
@@ -1597,16 +1702,50 @@
 
 /* ------------------------------------------------------- ink and notes */
 
-/* A word Laura marked: a stroke of cobalt pen under it, drawn on the HTML
-   text (never on the canvas). The stroke stretches with the word but keeps
-   its weight. */
+/* A word Laura marked, in her black felt-tip pen (components/desk/Mao.tsx):
+   a line under it, or a loop around it. The ink is an SVG over the HTML
+   text (never on the canvas); it stretches with the word but the pen keeps
+   its width. */
 .tinta {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 10' preserveAspectRatio='none'%3E%3Cpath d='M1.5 6.4C18 4.9 37 7.3 58 5.6S88 4.7 98.5 6' fill='none' stroke='%231d46a6' stroke-width='1.7' stroke-linecap='round' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
-  background-position: left bottom;
-  background-size: 100% 0.42em;
-  background-repeat: no-repeat;
-  -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
+  position: relative;
+}
+
+.tinta[data-como="circulo"] {
+  white-space: nowrap;
+}
+
+.risco {
+  position: absolute;
+  overflow: visible;
+  pointer-events: none;
+  fill: none;
+  stroke: var(--caneta);
+  stroke-width: 0.1em;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.92;
+}
+
+.risco path {
+  vector-effect: non-scaling-stroke;
+}
+
+.risco .risco-peso {
+  stroke-width: 0.13em;
+}
+
+.risco-sublinhado {
+  left: -0.08em;
+  bottom: -0.3em;
+  width: calc(100% + 0.18em);
+  height: 0.42em;
+}
+
+.risco-circulo {
+  left: -0.3em;
+  top: -0.14em;
+  width: calc(100% + 0.6em);
+  height: 1.6em;
 }
 
 /* With a note, the word is a button that still reads as a word of the verse. */
@@ -1651,7 +1790,14 @@
   width: 0.2em;
   height: 0.2em;
   border-radius: 50%;
-  background: var(--cobalto);
+  background: var(--caneta);
+  opacity: 0.85;
+}
+
+/* Circled, the dot sits outside the loop. */
+.tinta-nota[data-como="circulo"]::after {
+  top: -0.12em;
+  right: -0.5em;
 }
 
 /* A finger-sized target around the word, without moving the text. */

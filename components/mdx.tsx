@@ -1,5 +1,6 @@
 import { Children, Fragment, isValidElement, type ReactNode } from "react";
 import { NotedMark } from "@/components/desk/Nota";
+import { Margem, Risco, Tinta, type MarkStyle } from "@/components/desk/Mao";
 
 /**
  * Components available inside poem `.mdx` files.
@@ -12,23 +13,36 @@ import { NotedMark } from "@/components/desk/Nota";
  * A word or phrase Laura marked, with an optional margin note:
  *
  *   Quem quer passar além do <Mark note="cabo, no Saara Ocidental">Bojador</Mark>
+ *   <Mark como="circulo" note="…">Dolente</Mark>
  *
- * The word is underlined in cobalt ink. With a note it is also a button that
- * opens the note on a slip in the margin (components/desk/Nota.tsx); without
- * one it is only the ink. The note never sits inside the verse, so selecting
- * or copying lines leaves it out.
+ * The word is underlined in her pen, or circled with `como="circulo"` (the
+ * words she looked up). With a note it is also a button that opens the note
+ * on a slip in the margin (components/desk/Nota.tsx); without one it is only
+ * the ink. The note never sits inside the verse, so selecting or copying
+ * lines leaves it out.
  */
 export function Mark({
   note,
+  como = "sublinhado",
   children,
 }: {
   note?: string;
+  como?: MarkStyle;
   children: ReactNode;
 }) {
   const text = note?.trim();
-  if (!text) return <span className="tinta">{children}</span>;
+  const word = plainText(children);
+  const ink = <Tinta como={como} seed={word} />;
+  if (!text) {
+    return (
+      <span className="tinta" data-como={como}>
+        {children}
+        {ink}
+      </span>
+    );
+  }
   return (
-    <NotedMark word={plainText(children)} note={text}>
+    <NotedMark word={word} note={text} como={como} ink={ink}>
       {children}
     </NotedMark>
   );
@@ -68,17 +82,34 @@ function toLines(children: ReactNode): ReactNode[][] {
   return lines.filter((line) => line.length > 0);
 }
 
-/** A stanza: each source line becomes one line of verse. */
+const isNote = (node: ReactNode) => isValidElement(node) && node.type === Margem;
+
+/**
+ * A stanza: each source line becomes one line of verse. A margin note
+ * written at the end of a line comes out of it and follows the line, so it
+ * is never part of the verse.
+ */
 function Stanza({ children }: { children?: ReactNode }) {
   return (
     <p className="estrofe">
-      {toLines(children).map((line, i) => (
-        <span className="verso" key={i}>
-          {line.map((node, j) => (
-            <Fragment key={j}>{node}</Fragment>
-          ))}
-        </span>
-      ))}
+      {toLines(children).map((line, i) => {
+        const verse = line.filter((node) => !isNote(node));
+        const notes = line.filter(isNote);
+        return (
+          <Fragment key={i}>
+            {verse.length > 0 && (
+              <span className="verso">
+                {verse.map((node, j) => (
+                  <Fragment key={j}>{node}</Fragment>
+                ))}
+              </span>
+            )}
+            {notes.map((node, j) => (
+              <Fragment key={`n${j}`}>{node}</Fragment>
+            ))}
+          </Fragment>
+        );
+      })}
     </p>
   );
 }
@@ -86,4 +117,6 @@ function Stanza({ children }: { children?: ReactNode }) {
 export const mdxComponents = {
   p: Stanza,
   Mark,
+  Margem,
+  Risco,
 };

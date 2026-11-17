@@ -16,8 +16,17 @@ out: `numeral` (the poem's number in its book), `paper` (`carta` | `maquina`,
 overrides the book's paper), `source` (URL the text came from), `facsimile`
 (`{ src, source, caption? }`: a scan of Pessoa's page shown as a numbered figure
 on the back; `src` is a file in `public/` or a host listed in
-`lib/facsimiles.ts`, `source` is the scan's credit URL). Inside a poem,
-`<Mark note="…">word</Mark>` marks a word; in v1 it renders as plain text.
+`lib/facsimiles.ts`, `source` is the scan's credit URL), `titleNote`
+(Laura's note beside the title, reached by her arrow). Inside a poem, Laura's
+pen: `<Mark>word</Mark>` underlines a word, `<Mark
+como="circulo">` circles it, and `note="…"` adds a slip opened by pressing
+it; `<Margem>…</Margem>` at the end of a line is a note in her handwriting
+beside that line (`lado="baixo"` on its own paragraph: under the poem; `x`,
+`y`, `largura`, `inclina` in ems/degrees place it); `<Risco />` is a word she
+scribbled out. Her handwriting is a font made from photos of her notes
+(`app/fonts/laura-mao.woff2`, built by `scripts/letra/`); it has no digits,
+so write notes without them. A poem whose frontmatter says `RASCUNHO` has
+marks written by Claude, not Laura, waiting for her to review.
 
 Where things live:
 
@@ -34,6 +43,8 @@ Where things live:
 | `components/desk/sound.ts` | Sound effects: synthesised recipes, with a `src` slot for recordings |
 | `lib/prefs.ts` | What a visitor chose (sound on, candle lit), kept on their device |
 | `components/mdx.tsx` | Components available inside poems |
+| `components/desk/Mao.tsx`, `caneta.ts` | Laura's hand: pen marks and handwritten notes |
+| `scripts/letra/` | Builds her handwriting font from photos of her pages |
 | `lib/og.ts` | Link previews: `og:video` + `og:image` per page and language |
 | `scripts/og-video.mjs` | Records those previews from the real desk (`pnpm og`, against `pnpm start --port 3211`); rerun after adding a poem or changing the desk's look |
 | `lib/llms.ts`, `app/llms.txt/`, `app/llms-full.txt/` | `/llms.txt` (site, how it works, every poem's links) and `/llms-full.txt` (plus the texts) for AI agents, built from the poems |
@@ -67,6 +78,9 @@ Rules that hold for every change:
 - All interface copy goes in `lib/strings.ts`, in both dictionaries. No UI
   strings in components; read them with `useStrings()` (client) or
   `getStrings(lang)` (server).
+- Laura's handwriting is only ever her own words (copied from her pages) or
+  a marked draft for her to review (`RASCUNHO`). Notes stay real text, out
+  of the verse.
 - Take poem text from a reliable source (Arquivo Pessoa) and check it. Never
   write a poem from memory, and never invent Laura's words or reflections:
   use clearly marked placeholder text.

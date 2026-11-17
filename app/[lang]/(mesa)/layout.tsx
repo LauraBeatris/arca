@@ -14,6 +14,7 @@ export default function MesaLayout({ children }: LayoutProps<"/[lang]">) {
     slug: poem.slug,
     title: poem.title,
     numeral: poem.numeral,
+    titleNote: poem.titleNote,
     book: poem.book,
     paper: poem.paper,
     markedAt: poem.markedAt,

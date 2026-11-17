@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Libre_Caslon_Text, Special_Elite } from "next/font/google";
+import localFont from "next/font/local";
 import { LinguaProvider } from "@/components/Lingua";
 import { DEFAULT_LANG, LANGS, homePath, isLang } from "@/lib/lang";
 import { linkPreview } from "@/lib/og";
@@ -21,6 +22,14 @@ const typewriter = Special_Elite({
   weight: "400",
   subsets: ["latin"],
   variable: "--font-typewriter",
+  display: "swap",
+});
+
+// Laura's hand: a font made from her own handwriting (scripts/letra/), for
+// the notes she writes in the margins.
+const mao = localFont({
+  src: "../fonts/laura-mao.woff2",
+  variable: "--font-mao",
   display: "swap",
 });
 
@@ -64,7 +73,7 @@ export default async function RootLayout({ children, params }: LayoutProps<"/[la
   const { lang: param } = await params;
   const lang = isLang(param) ? param : DEFAULT_LANG;
   return (
-    <html lang={lang} className={`${serif.variable} ${typewriter.variable}`}>
+    <html lang={lang} className={`${serif.variable} ${typewriter.variable} ${mao.variable}`}>
       <body>
         <LinguaProvider lang={lang}>{children}</LinguaProvider>
       </body>
