@@ -89,6 +89,10 @@ const pt = {
     share: "p",
   },
 
+  // A word Laura marked with a note in the margin.
+  noteOn: (word: string) => `Nota sobre “${word}”`,
+  closeNote: "Fechar nota",
+
   notFoundTitle: "Esta folha não está na arca.",
   notFoundBack: "Voltar à pilha",
 
@@ -207,6 +211,9 @@ const en: Strings = {
     dictionary: "d",
     share: "s",
   },
+
+  noteOn: (word) => `Note on “${word}”`,
+  closeNote: "Close note",
 
   notFoundTitle: "This sheet isn’t in the Arca.",
   notFoundBack: "Back to the pile",

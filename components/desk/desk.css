@@ -1362,6 +1362,258 @@
   touch-action: manipulation;
 }
 
+/* ------------------------------------------------------- ink and notes */
+
+/* A word Laura marked: a stroke of cobalt pen under it, drawn on the HTML
+   text (never on the canvas). The stroke stretches with the word but keeps
+   its weight. */
+.tinta {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 10' preserveAspectRatio='none'%3E%3Cpath d='M1.5 6.4C18 4.9 37 7.3 58 5.6S88 4.7 98.5 6' fill='none' stroke='%231d46a6' stroke-width='1.7' stroke-linecap='round' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
+  background-position: left bottom;
+  background-size: 100% 0.42em;
+  background-repeat: no-repeat;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+/* With a note, the word is a button that still reads as a word of the verse. */
+.tinta-nota {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 2px;
+  background-color: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  line-height: inherit;
+  text-align: inherit;
+  text-indent: 0;
+  text-transform: inherit;
+  vertical-align: baseline;
+  cursor: text;
+  -webkit-user-select: text;
+  user-select: text;
+  transition: background-color 0.15s ease;
+}
+
+/* Only the marks on the page being read can be pressed. On the pile the
+   word is part of a sheet you drag. */
+.tinta-nota:not([data-viva]) {
+  pointer-events: none;
+}
+
+.tinta-nota[data-viva] {
+  cursor: pointer;
+}
+
+/* The pen's dot after the word: there is a note. Generated, so it is never
+   selected, copied or shared with the verse. */
+.tinta-nota::after {
+  content: "";
+  position: absolute;
+  top: 0.08em;
+  right: -0.3em;
+  width: 0.2em;
+  height: 0.2em;
+  border-radius: 50%;
+  background: var(--cobalto);
+}
+
+/* A finger-sized target around the word, without moving the text. */
+.tinta-nota[data-viva]::before {
+  content: "";
+  position: absolute;
+  inset: -0.45em -0.35em;
+}
+
+/* Fingers need more: about 40px tall on a phone, reaching a little into the
+   lines above and below. */
+@media (pointer: coarse) {
+  .tinta-nota[data-viva]::before {
+    inset: -12px -6px;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .tinta-nota[data-viva]:hover {
+    background-color: rgb(29 70 166 / 0.08);
+  }
+}
+
+.tinta-nota[aria-expanded="true"] {
+  background-color: rgb(29 70 166 / 0.14);
+}
+
+.tinta-nota:focus-visible {
+  outline: 2px solid var(--cobalto);
+  outline-offset: 2px;
+}
+
+/* The note: a slip of paper laid in the margin beside the line, written in
+   Laura's cobalt. */
+.nota-margem {
+  position: fixed;
+  z-index: 210;
+  width: 248px;
+  padding: 13px 40px 15px 16px;
+  border: 1px solid rgb(60 40 20 / 0.12);
+  border-radius: 3px;
+  background: #f6efdf;
+  color: var(--cobalto);
+  box-shadow:
+    0 1px 2px rgb(20 10 4 / 0.2),
+    0 8px 22px rgb(20 10 4 / 0.28);
+  font-size: 0.95rem;
+  line-height: 1.45;
+  outline: none;
+  rotate: -0.6deg;
+  animation: nota-entra 220ms var(--ease-out);
+}
+
+.nota-margem[hidden] {
+  display: none;
+}
+
+.nota-margem[data-lado="left"] {
+  rotate: 0.6deg;
+  animation-name: nota-entra-esquerda;
+}
+
+@keyframes nota-entra {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+}
+
+@keyframes nota-entra-esquerda {
+  from {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+}
+
+.nota-palavra {
+  margin: 0 0 0.4em;
+  color: rgb(29 70 166 / 0.72);
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.nota-texto {
+  margin: 0;
+  font-style: italic;
+  white-space: pre-line;
+}
+
+.nota-fechar {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: rgb(27 19 12 / 0.55);
+  cursor: pointer;
+  transition: background-color 0.12s ease;
+}
+
+.nota-fechar svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .nota-fechar:hover {
+    background: rgb(60 40 20 / 0.07);
+  }
+}
+
+.nota-fechar:active {
+  background: rgb(60 40 20 / 0.11);
+}
+
+.nota-fechar:focus-visible {
+  outline: 2px solid var(--cobalto);
+  outline-offset: -2px;
+}
+
+/* Phones and touch screens: the slip rises from the bottom of the screen. */
+.nota-margem[data-modo="baixo"] {
+  right: max(12px, env(safe-area-inset-right));
+  bottom: max(12px, env(safe-area-inset-bottom));
+  left: max(12px, env(safe-area-inset-left));
+  width: auto;
+  max-width: 520px;
+  margin-inline: auto;
+  padding: 16px 56px 20px 20px;
+  border-radius: 12px;
+  font-size: 1rem;
+  rotate: none;
+  animation: nota-sobe 280ms var(--ease-out);
+}
+
+.nota-margem[data-modo="baixo"] .nota-fechar {
+  top: 6px;
+  right: 6px;
+  width: 44px;
+  height: 44px;
+}
+
+@keyframes nota-sobe {
+  from {
+    transform: translateY(calc(100% + 24px));
+  }
+}
+
+/* Opened with a key: it is simply there. */
+.mesa .nota-margem[data-instantaneo] {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nota-margem,
+  .nota-margem[data-lado="left"],
+  .nota-margem[data-modo="baixo"] {
+    animation: nota-aparece 200ms ease;
+  }
+  .tinta-nota,
+  .nota-fechar {
+    transition: none;
+  }
+}
+
+@keyframes nota-aparece {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (forced-colors: active) {
+  .tinta {
+    background-image: none;
+    text-decoration: underline;
+  }
+  .tinta-nota::after {
+    background: CanvasText;
+  }
+  .nota-margem {
+    border: 1px solid CanvasText;
+  }
+}
+
 /* ------------------------------------------------------------ preferences */
 
 @media (prefers-reduced-motion: reduce) {

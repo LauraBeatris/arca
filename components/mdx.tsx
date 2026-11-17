@@ -1,4 +1,5 @@
 import { Children, Fragment, isValidElement, type ReactNode } from "react";
+import { NotedMark } from "@/components/desk/Nota";
 
 /**
  * Components available inside poem `.mdx` files.
@@ -12,9 +13,10 @@ import { Children, Fragment, isValidElement, type ReactNode } from "react";
  *
  *   Quem quer passar além do <Mark note="cabo, no Saara Ocidental">Bojador</Mark>
  *
- * v1 only settles the format. It renders as plain text, with the note kept in
- * the markup. A later version draws it as cobalt ink with the note written in
- * the margin.
+ * The word is underlined in cobalt ink. With a note it is also a button that
+ * opens the note on a slip in the margin (components/desk/Nota.tsx); without
+ * one it is only the ink. The note never sits inside the verse, so selecting
+ * or copying lines leaves it out.
  */
 export function Mark({
   note,
@@ -23,11 +25,28 @@ export function Mark({
   note?: string;
   children: ReactNode;
 }) {
+  const text = note?.trim();
+  if (!text) return <span className="tinta">{children}</span>;
   return (
-    <span className="marca" data-nota={note}>
+    <NotedMark word={plainText(children)} note={text}>
       {children}
-    </span>
+    </NotedMark>
   );
+}
+
+/** The words inside a bit of markup, for labels. */
+function plainText(node: ReactNode): string {
+  return Children.toArray(node)
+    .map((child) =>
+      typeof child === "string" || typeof child === "number"
+        ? String(child)
+        : isValidElement<{ children?: ReactNode }>(child)
+          ? plainText(child.props.children)
+          : "",
+    )
+    .join("")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 /** Splits a paragraph's children into lines of verse at each line break. */

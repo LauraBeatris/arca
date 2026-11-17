@@ -27,6 +27,7 @@ import { formatDate } from "@/lib/strings";
 import { DeskEngine, type View } from "./engine";
 import { Assinatura } from "./Assinatura";
 import { Marca } from "./Marca";
+import { MarginNote } from "./Nota";
 import { SelectionMenu, type SelectionMenuHandle } from "./SelectionMenu";
 import { DeskSound, SOUNDS, makeNoise, playRecipe, type SoundId } from "./sound";
 import "./desk.css";
@@ -663,6 +664,8 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
           poem={reading}
           page={page}
         />
+
+        <MarginNote rootRef={rootRef} poem={reading} page={page} />
 
         <p className="sr-only" role="status" aria-live="polite">
           {tilt === "denied" ? t.tiltDenied : message}
