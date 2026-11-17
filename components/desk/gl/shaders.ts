@@ -262,6 +262,7 @@ uniform float uLampOn;    // 0..1, the lamp warming up
 uniform float uFalloff;   // px at which the lamp has halved
 uniform vec3 uCandle;     // candle flame position, world px
 uniform float uCandleOn;  // 0..1, flickers
+uniform vec3 uLampTint;   // the book on top's lamp colour (lib/papers.ts)
 const vec3 AMBIENT = vec3(0.33, 0.35, 0.40);
 const vec3 LAMP = vec3(1.0, 0.925, 0.80);
 const vec3 CANDLE = vec3(1.0, 0.58, 0.24);
@@ -288,6 +289,7 @@ uniform sampler2D uAlbedo;
 uniform sampler2D uRelief;
 uniform float uTilePx;
 uniform float uDim;
+uniform vec3 uDeskTint;   // the book on top's desk tone (lib/papers.ts)
 ${LIGHT}
 out vec4 o;
 ${NOISE}
@@ -307,9 +309,9 @@ void main() {
   // A faint sheen from the varnish.
   vec3 hv = normalize(l + vec3(0.0, 0.0, 1.0));
   float spec = pow(max(dot(n, hv), 0.0), 18.0) * 0.045;
-  vec3 light = AMBIENT * 1.05 + LAMP * (diffuse * 0.92 + spec * 6.0) * att * uLampOn;
+  vec3 light = AMBIENT * 1.05 + LAMP * uLampTint * (diffuse * 0.92 + spec * 6.0) * att * uLampOn;
   light += candleLight(vec3(px, 0.0), n, vec3(0.0, 0.0, 1.0), 1.1) * 0.95;
-  vec3 col = alb * light * uDim;
+  vec3 col = alb * light * uDim * uDeskTint;
   col += (hash12(gl_FragCoord.xy) - 0.5) / 255.0;
   o = vec4(col, 1.0);
 }
@@ -393,7 +395,7 @@ void main() {
   float flatL = max(dot(Nf, l), 0.0);
   float det = dot(N, l) - dot(Nf, l);
   float diffuse = max(mix(1.0, flatL, 0.5) + det * 1.7, 0.0);
-  vec3 light = AMBIENT + LAMP * diffuse * att * uLampOn * 0.86;
+  vec3 light = AMBIENT + LAMP * uLampTint * diffuse * att * uLampOn * 0.86;
   light += candleLight(vWorld, N, Nf, 1.7) * uCandleK;
 
   // Age: paper yellows from the edges inwards.

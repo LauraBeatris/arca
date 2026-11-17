@@ -203,6 +203,7 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
       canvas,
       poems.map((poem) => ({
         slug: poem.slug,
+        book: poem.book,
         paper: poem.paper,
         sheets: poem.sheets.length,
       })),
