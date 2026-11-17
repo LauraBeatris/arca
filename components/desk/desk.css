@@ -308,6 +308,83 @@
   }
 }
 
+/*
+ * The title and tagline are printed on a small cream label laid on the desk,
+ * like a bookplate: dark ink, an inner ruled border, turned a little off
+ * square. The English hint stays on the wood, under it.
+ */
+.etiqueta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1em;
+  padding: 0.6em 1.5em 0.65em;
+  border-radius: 2px;
+  background: #ece3cc;
+  color: #2a1a0e;
+  text-shadow: none;
+  box-shadow:
+    0 1px 1px rgb(10 6 3 / 0.35),
+    0 4px 10px rgb(10 6 3 / 0.4);
+  outline: 1px solid rgb(42 26 14 / 0.3);
+  outline-offset: -5px;
+  transform: rotate(-1.2deg);
+  animation: marca-surge 600ms ease both;
+}
+
+.etiqueta h1 {
+  font-size: 1.25rem;
+}
+
+.etiqueta .marca {
+  filter: none;
+}
+
+.mesa-topo .etiqueta p {
+  font-size: 0.8rem;
+  opacity: 0.78;
+}
+
+.mesa-topo .mesa-aviso-lingua {
+  margin-top: 0.5em;
+}
+
+/* On phones the corner switches take the top row, so the label sits under
+   them. */
+@media (max-width: 639px) {
+  .mesa-topo {
+    top: max(54px, calc(env(safe-area-inset-top) + 48px));
+  }
+  .etiqueta {
+    padding-inline: 1.1em;
+  }
+  .etiqueta h1 {
+    font-size: 1.1rem;
+  }
+  .mesa-topo .etiqueta p {
+    font-size: 0.74rem;
+  }
+}
+
+/*
+ * With room on both sides of the buttons, the English hint leaves the title
+ * and sits in the lower left corner, across from the signature.
+ */
+@media (min-width: 960px) {
+  .mesa-topo .mesa-aviso-lingua {
+    position: fixed;
+    left: max(20px, env(safe-area-inset-left));
+    bottom: max(20px, env(safe-area-inset-bottom));
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+    max-width: 20em;
+    margin: 0;
+    font-style: italic;
+    text-align: left;
+  }
+}
+
 /* ----------------------------------------------------------------- sheets */
 
 .pilha {
