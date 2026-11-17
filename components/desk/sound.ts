@@ -2,11 +2,9 @@
  * Desk sounds: paper sliding, lifting, landing, turning, and the candle.
  *
  * Like the paper, the sounds are made here rather than recorded: each one is
- * shaped noise (a `rustle` is the hiss of paper moving, `snaps` are the small
- * clicks of a sheet bending, a `thump` is it landing). To use a recording
- * instead, give a
- * sound a `src` in SOUNDS; the recipe is then only the fallback while the file
- * loads or if it fails.
+ * shaped noise (a `rustle` is the hiss of paper moving, a `thump` is it
+ * landing). To use a recording instead, give a sound a `src` in SOUNDS; the
+ * recipe is then only the fallback while the file loads or if it fails.
  *
  * Sounds only ever play in answer to something the visitor did, they are
  * short and quiet, and they can be turned off (see `lib/prefs.ts`).
@@ -52,20 +50,7 @@ type Thump = {
   cutoff: number;
 };
 
-/** A scatter of tiny clicks: the sound of a sheet buckling as it bends. */
-type Snaps = {
-  kind: "snaps";
-  at?: number;
-  /** The clicks fall inside this window, bunched towards its middle. */
-  dur: number;
-  count: number;
-  gain: number;
-  /** Each click rings somewhere in this range (Hz). */
-  from: number;
-  to: number;
-};
-
-type Layer = Rustle | Thump | Snaps;
+type Layer = Rustle | Thump;
 
 type Sound = {
   /** Optional recording to play instead of the recipe. */
@@ -98,46 +83,38 @@ export const SOUNDS: Record<SoundId, Sound> = {
       { kind: "rustle", at: 0.26, dur: 0.08, gain: 0.05, from: 2600, to: 1800, q: 0.9, crackle: 0.3, attack: 0.004 },
     ],
   },
-  // A book page turning is mostly not hiss (a long hiss sounds like sweeping
-  // a floor). It is a few dry clicks as the corner is caught and the page
-  // lifts, one crisp flap as it whips over and slaps down, then a couple of
-  // smaller taps as it settles.
+  // A page turning, after a recording of a book on a reading desk: one
+  // continuous, airy swish rather than a run of clicks. A soft, bright brush
+  // as the corner lifts, a breath while it rises, the broad sweep as it falls
+  // through the air (most of it around 2 kHz, with a little low air pushed
+  // ahead of it), and a tail that darkens as the page settles.
   page: {
     recipe: [
-      { kind: "snaps", dur: 0.05, count: 3, gain: 0.05, from: 3200, to: 7000 },
-      { kind: "snaps", at: 0.05, dur: 0.13, count: 5, gain: 0.055, from: 1800, to: 4800 },
-      { kind: "rustle", at: 0.15, dur: 0.075, gain: 0.04, from: 1800, to: 5200, q: 0.7, crackle: 0.8, attack: 0.04 },
-      { kind: "rustle", shape: "hit", at: 0.225, dur: 0.075, gain: 0.11, from: 4800, to: 1300, q: 0.5, crackle: 0.85 },
-      { kind: "thump", at: 0.225, dur: 0.05, gain: 0.05, cutoff: 520 },
-      { kind: "rustle", shape: "hit", at: 0.285, dur: 0.03, gain: 0.05, from: 3600, to: 1800, q: 0.8, crackle: 0.6 },
-      { kind: "rustle", shape: "hit", at: 0.322, dur: 0.025, gain: 0.028, from: 3200, to: 1700, q: 0.8, crackle: 0.6 },
-      { kind: "snaps", at: 0.29, dur: 0.08, count: 3, gain: 0.04, from: 1800, to: 4000 },
+      { kind: "rustle", shape: "hit", dur: 0.06, gain: 0.05, from: 3600, to: 2500, q: 0.8, crackle: 0.5 },
+      { kind: "rustle", at: 0.06, dur: 0.27, gain: 0.08, from: 2400, to: 1600, q: 0.95, crackle: 0.45, attack: 0.05 },
+      { kind: "rustle", shape: "hit", at: 0.2, dur: 0.04, gain: 0.03, from: 2200, to: 1300, q: 0.8, crackle: 0.5 },
+      { kind: "rustle", at: 0.06, dur: 0.3, gain: 0.03, from: 300, to: 200, q: 0.7, attack: 0.06 },
+      { kind: "rustle", at: 0.24, dur: 0.22, gain: 0.03, from: 1500, to: 900, q: 0.7, crackle: 0.3, attack: 0.02 },
     ],
   },
   pageBack: {
     recipe: [
-      { kind: "snaps", dur: 0.05, count: 3, gain: 0.05, from: 2800, to: 6400 },
-      { kind: "snaps", at: 0.05, dur: 0.12, count: 5, gain: 0.055, from: 1600, to: 4400 },
-      { kind: "rustle", at: 0.14, dur: 0.075, gain: 0.04, from: 1600, to: 4600, q: 0.7, crackle: 0.8, attack: 0.04 },
-      { kind: "rustle", shape: "hit", at: 0.215, dur: 0.08, gain: 0.105, from: 4200, to: 1150, q: 0.5, crackle: 0.85 },
-      { kind: "thump", at: 0.215, dur: 0.055, gain: 0.055, cutoff: 480 },
-      { kind: "rustle", shape: "hit", at: 0.28, dur: 0.03, gain: 0.05, from: 3200, to: 1600, q: 0.8, crackle: 0.6 },
-      { kind: "rustle", shape: "hit", at: 0.318, dur: 0.025, gain: 0.028, from: 2900, to: 1500, q: 0.8, crackle: 0.6 },
-      { kind: "snaps", at: 0.285, dur: 0.08, count: 3, gain: 0.04, from: 1600, to: 3600 },
+      { kind: "rustle", shape: "hit", dur: 0.06, gain: 0.05, from: 3300, to: 2300, q: 0.8, crackle: 0.5 },
+      { kind: "rustle", at: 0.06, dur: 0.27, gain: 0.08, from: 2200, to: 1450, q: 0.95, crackle: 0.45, attack: 0.05 },
+      { kind: "rustle", shape: "hit", at: 0.19, dur: 0.04, gain: 0.03, from: 2000, to: 1200, q: 0.8, crackle: 0.5 },
+      { kind: "rustle", at: 0.06, dur: 0.3, gain: 0.03, from: 280, to: 190, q: 0.7, attack: 0.06 },
+      { kind: "rustle", at: 0.23, dur: 0.22, gain: 0.03, from: 1400, to: 850, q: 0.7, crackle: 0.3, attack: 0.02 },
     ],
   },
   // Turning the whole sheet over: the same gesture with a bigger, looser
   // sheet, so a little slower and deeper.
   flip: {
     recipe: [
-      { kind: "snaps", dur: 0.06, count: 3, gain: 0.05, from: 2600, to: 6000 },
-      { kind: "snaps", at: 0.06, dur: 0.18, count: 6, gain: 0.055, from: 1500, to: 4200 },
-      { kind: "rustle", at: 0.21, dur: 0.09, gain: 0.04, from: 1400, to: 4200, q: 0.7, crackle: 0.8, attack: 0.05 },
-      { kind: "rustle", shape: "hit", at: 0.3, dur: 0.09, gain: 0.105, from: 3800, to: 1000, q: 0.5, crackle: 0.85 },
-      { kind: "thump", at: 0.3, dur: 0.06, gain: 0.06, cutoff: 440 },
-      { kind: "rustle", shape: "hit", at: 0.375, dur: 0.035, gain: 0.05, from: 3000, to: 1500, q: 0.8, crackle: 0.6 },
-      { kind: "rustle", shape: "hit", at: 0.42, dur: 0.028, gain: 0.028, from: 2700, to: 1400, q: 0.8, crackle: 0.6 },
-      { kind: "snaps", at: 0.38, dur: 0.09, count: 3, gain: 0.04, from: 1500, to: 3400 },
+      { kind: "rustle", shape: "hit", dur: 0.07, gain: 0.05, from: 3100, to: 2200, q: 0.8, crackle: 0.5 },
+      { kind: "rustle", at: 0.07, dur: 0.33, gain: 0.08, from: 2100, to: 1400, q: 0.95, crackle: 0.45, attack: 0.06 },
+      { kind: "rustle", shape: "hit", at: 0.25, dur: 0.045, gain: 0.03, from: 1900, to: 1100, q: 0.8, crackle: 0.5 },
+      { kind: "rustle", at: 0.07, dur: 0.36, gain: 0.035, from: 260, to: 180, q: 0.7, attack: 0.07 },
+      { kind: "rustle", at: 0.3, dur: 0.26, gain: 0.03, from: 1300, to: 780, q: 0.7, crackle: 0.3, attack: 0.02 },
     ],
   },
   light: {
@@ -171,32 +148,6 @@ export function playRecipe(
     const start = when + (layer.at ?? 0) * pace;
     const dur = layer.dur * pace;
     const end = start + dur;
-
-    if (layer.kind === "snaps") {
-      for (let i = 0; i < layer.count; i++) {
-        // Two random numbers averaged: clicks bunch towards the middle.
-        const at = start + (dur * (Math.random() + Math.random())) / 2;
-        const ring = 0.004 + Math.random() * 0.009;
-        const source = ctx.createBufferSource();
-        source.buffer = noise;
-        const band = ctx.createBiquadFilter();
-        band.type = "bandpass";
-        band.Q.value = 1.2 + Math.random() * 1.6;
-        band.frequency.value =
-          (layer.from + Math.random() * (layer.to - layer.from)) * tune;
-        const click = ctx.createGain();
-        click.gain.setValueAtTime(0, at);
-        click.gain.linearRampToValueAtTime(
-          layer.gain * 5 * (0.35 + 0.65 * Math.random()),
-          at + 0.0005,
-        );
-        click.gain.exponentialRampToValueAtTime(0.0001, at + ring);
-        source.connect(band).connect(click).connect(out);
-        source.start(at, offset());
-        source.stop(at + ring + 0.02);
-      }
-      continue;
-    }
 
     const source = ctx.createBufferSource();
     source.buffer = noise;
