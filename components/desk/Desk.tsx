@@ -272,8 +272,15 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
 
   /* ------------------------------------------------------------------ keys */
 
+  // The keys come from the same entries the buttons show as hints.
+  const keys = t.keys;
+  const moreKey = t.shortcuts.more;
+
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
+      // Someone is using a keyboard: show the key hints (see .tecla), also
+      // on a touch screen with a keyboard attached.
+      rootRef.current?.setAttribute("data-teclado", "");
       if (event.defaultPrevented) return;
       if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
       const el = event.target as HTMLElement | null;
@@ -281,37 +288,29 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
         return;
       }
       const now = live.current;
-      switch (event.key) {
-        case "ArrowRight":
-        case "ArrowDown":
-          if (now.picked) now.turn(1);
-          else now.next();
-          break;
-        case "ArrowLeft":
-        case "ArrowUp":
-          if (now.picked) now.turn(-1);
-          else now.previous();
-          break;
-        case "Escape":
-          if (!now.picked) return;
-          now.putDown();
-          break;
-        case t.shortcuts.more:
-        case t.shortcuts.more.toUpperCase(): {
-          const more = moreButton.current;
-          if (!now.picked || !more) return;
-          // From a key, so it opens at once, with no entrance.
-          menu.current?.toggleForSheet(more, true);
-          break;
-        }
-        default:
-          return;
+      const is = (entry: DeskKey) => entry.keys.includes(event.key);
+      if (is(keys.next)) {
+        if (now.picked) now.turn(1);
+        else now.next();
+      } else if (is(keys.previous)) {
+        if (now.picked) now.turn(-1);
+        else now.previous();
+      } else if (is(keys.putDown)) {
+        if (!now.picked) return;
+        now.putDown();
+      } else if (event.key.toLowerCase() === moreKey) {
+        const more = moreButton.current;
+        if (!now.picked || !more) return;
+        // From a key, so it opens at once, with no entrance.
+        menu.current?.toggleForSheet(more, true);
+      } else {
+        return;
       }
       event.preventDefault();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [t.shortcuts.more]);
+  }, [keys, moreKey]);
 
   /* ---------------------------------------------------------------- render */
 
@@ -497,15 +496,20 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
           {!picked ? (
             <>
               <div className="comandos-grupo" key="pilha-percorrer">
-                <DeskButton onPress={previous} disabled={top === 0}>
-                  <span aria-hidden="true">←</span> {t.previousPoem}
+                <DeskButton
+                  onPress={previous}
+                  disabled={top === 0}
+                  shortcut={keys.previous}
+                  hintFirst
+                >
+                  {t.previousPoem}
                 </DeskButton>
                 <p className="posicao">
                   <span aria-hidden="true">{t.pageShort(top + 1, total)}</span>
                   <span className="sr-only">{t.poemCount(top + 1, total)}</span>
                 </p>
-                <DeskButton onPress={next} disabled={top === total - 1}>
-                  {t.nextPoem} <span aria-hidden="true">→</span>
+                <DeskButton onPress={next} disabled={top === total - 1} shortcut={keys.next}>
+                  {t.nextPoem}
                 </DeskButton>
               </div>
               <div className="comandos-grupo" key="pilha-pegar">
@@ -518,8 +522,13 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
             <>
               {sheetCount > 1 && (
                 <div className="comandos-grupo" key="folha-paginas">
-                  <DeskButton onPress={() => turn(-1)} disabled={flipped || page === 0}>
-                    <span aria-hidden="true">←</span> {t.previousPage}
+                  <DeskButton
+                    onPress={() => turn(-1)}
+                    disabled={flipped || page === 0}
+                    shortcut={keys.previous}
+                    hintFirst
+                  >
+                    {t.previousPage}
                   </DeskButton>
                   <p className="posicao">
                     <span aria-hidden="true">{t.pageShort(page + 1, sheetCount)}</span>
@@ -530,8 +539,9 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
                   <DeskButton
                     onPress={() => turn(1)}
                     disabled={flipped || page === sheetCount - 1}
+                    shortcut={keys.next}
                   >
-                    {t.nextPage} <span aria-hidden="true">→</span>
+                    {t.nextPage}
                   </DeskButton>
                 </div>
               )}
@@ -539,7 +549,7 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
                 {!flipped && (
                   <DeskButton
                     ref={moreButton}
-                    shortcut={t.shortcuts.more}
+                    shortcut={{ keys: [moreKey], label: moreKey }}
                     onPress={(event) => {
                       // A click with detail 0 came from Enter or Space.
                       const more = moreButton.current;
@@ -550,7 +560,7 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
                   </DeskButton>
                 )}
                 <DeskButton onPress={flip}>{flipped ? t.seeFront : t.seeBack}</DeskButton>
-                <DeskButton primary onPress={putDown}>
+                <DeskButton primary onPress={putDown} shortcut={keys.putDown}>
                   {t.putDown}
                 </DeskButton>
               </div>
@@ -687,6 +697,7 @@ function DeskButton({
   primary,
   quiet,
   shortcut,
+  hintFirst,
   ref,
   children,
 }: {
@@ -694,11 +705,14 @@ function DeskButton({
   disabled?: boolean;
   primary?: boolean;
   quiet?: boolean;
-  /** A letter that also presses this button. */
-  shortcut?: string;
+  /** The keys that also press this button, and the hint that names them. */
+  shortcut?: DeskKey;
+  /** The hint goes before the label (a "back" arrow) rather than after it. */
+  hintFirst?: boolean;
   ref?: React.Ref<HTMLButtonElement>;
   children: ReactNode;
 }) {
+  const hint = shortcut && <KeyHint shortcut={shortcut} />;
   return (
     <button
       type="button"
@@ -706,12 +720,36 @@ function DeskButton({
       className="botao"
       data-variante={primary ? "principal" : quiet ? "discreto" : undefined}
       aria-disabled={disabled || undefined}
-      aria-keyshortcuts={shortcut?.toUpperCase()}
+      aria-keyshortcuts={shortcut?.keys
+        .map((key) => (key.length === 1 ? key.toUpperCase() : key))
+        .join(" ")}
       onClick={(event) => {
         if (!disabled) onPress(event);
       }}
     >
+      {hintFirst && hint}
       {children}
+      {!hintFirst && hint}
     </button>
+  );
+}
+
+type DeskKey = { keys: string[]; label: string };
+
+/**
+ * The key a button answers to, in small capitals beside its label. Screen
+ * readers get it from the button's aria-keyshortcuts instead. Arrows double
+ * as the button's direction, so they always show; the others only where a
+ * keyboard is likely (see .tecla in desk.css).
+ */
+function KeyHint({ shortcut }: { shortcut: DeskKey }) {
+  return (
+    <kbd
+      className="tecla"
+      aria-hidden="true"
+      data-seta={shortcut.keys[0].startsWith("Arrow") || undefined}
+    >
+      {shortcut.label}
+    </kbd>
   );
 }

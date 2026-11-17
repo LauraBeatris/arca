@@ -88,6 +88,13 @@ const pt = {
     dictionary: "d",
     share: "p",
   },
+  // Keys that move around the desk. `keys` are the KeyboardEvent keys that
+  // do it (the desk listens for these); `label` is the hint on its button.
+  keys: {
+    previous: { keys: ["ArrowLeft", "ArrowUp"], label: "←" },
+    next: { keys: ["ArrowRight", "ArrowDown"], label: "→" },
+    putDown: { keys: ["Escape"], label: "esc" },
+  },
 
   notFoundTitle: "Esta folha não está na arca.",
   notFoundBack: "Voltar à pilha",
@@ -206,6 +213,11 @@ const en: Strings = {
     listen: "l",
     dictionary: "d",
     share: "s",
+  },
+  keys: {
+    previous: { keys: ["ArrowLeft", "ArrowUp"], label: "←" },
+    next: { keys: ["ArrowRight", "ArrowDown"], label: "→" },
+    putDown: { keys: ["Escape"], label: "esc" },
   },
 
   notFoundTitle: "This sheet isn’t in the Arca.",
