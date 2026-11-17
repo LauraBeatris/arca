@@ -8,6 +8,8 @@ import { getPoems } from "@/lib/poems";
  * it. The pages below only say which URL exists.
  */
 export default function MesaLayout({ children }: LayoutProps<"/[lang]">) {
+  // Facsimiles are numbered like a book's figures, in pile order.
+  let figures = 0;
   const poems = getPoems().map((poem) => ({
     slug: poem.slug,
     title: poem.title,
@@ -17,6 +19,7 @@ export default function MesaLayout({ children }: LayoutProps<"/[lang]">) {
     markedAt: poem.markedAt,
     words: poem.words,
     reflection: poem.reflection,
+    facsimile: poem.facsimile && { ...poem.facsimile, figure: ++figures },
     sheets: poem.sheets,
   }));
   return (
