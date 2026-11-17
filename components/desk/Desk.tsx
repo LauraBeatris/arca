@@ -6,7 +6,6 @@ import {
   useMemo,
   useRef,
   useState,
-  useSyncExternalStore,
   type CSSProperties,
   type ReactNode,
 } from "react";
@@ -41,22 +40,8 @@ export type DeskPoem = Omit<PoemMeta, "sheetCount" | "source" | "facsimile"> & {
   facsimile?: DeskFacsimile;
 };
 
-const noSubscription = () => () => {};
-
 /** Text still waiting for Laura ("[Texto provisório: …]"): typed, never in her hand. */
 const provisional = (text: string) => /^\s*\[[\s\S]*\]\s*$/.test(text);
-
-function useMediaQuery(query: string): boolean {
-  return useSyncExternalStore(
-    (notify) => {
-      const media = window.matchMedia(query);
-      media.addEventListener("change", notify);
-      return () => media.removeEventListener("change", notify);
-    },
-    () => window.matchMedia(query).matches,
-    () => false,
-  );
-}
 
 /**
  * The desk: a pile of loose sheets, one poem each, newest marked on top.
@@ -93,17 +78,7 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
   const flipped = picked && position ? position.back : false;
 
   const [paper, setPaper] = useState(false);
-  const [tilt, setTilt] = useState<"on" | "off" | "denied">("off");
   const [message, setMessage] = useState("");
-
-  const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
-  const canTilt = useSyncExternalStore(
-    noSubscription,
-    () =>
-      "DeviceOrientationEvent" in window &&
-      window.matchMedia("(pointer: coarse)").matches,
-    () => false,
-  );
 
   const current = poems[top];
   const sheetCount = current.sheets.length;
@@ -251,7 +226,6 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
         onPutDown: () => live.current.putDown(),
         onPage: (delta) => live.current.leaf(delta),
         onPaper: setPaper,
-        onTilt: setTilt,
       },
       live.current.view,
     );
@@ -460,7 +434,6 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
           </h1>
           <p>{t.tagline}</p>
         </div>
-        {t.readingHint && <p className="mesa-aviso-lingua">{t.readingHint}</p>}
       </header>
 
       <main>
@@ -790,20 +763,6 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
           </svg>
         </button>
 
-        {canTilt && !reducedMotion && (
-          <div className="canto canto-esquerdo">
-            <DeskButton
-              quiet
-              onPress={() => {
-                if (tilt === "on") engineRef.current?.disableTilt();
-                else void engineRef.current?.enableTilt();
-              }}
-            >
-              {tilt === "on" ? t.tiltOff : t.tiltOn}
-            </DeskButton>
-          </div>
-        )}
-
         <div className="canto canto-direito">
           {/* The other language, named in that language. A real link, so it
               works before JavaScript loads; the click remembers the choice. */}
@@ -858,7 +817,7 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
         <MarginNote rootRef={rootRef} poem={reading} page={page} />
 
         <p className="sr-only" role="status" aria-live="polite">
-          {tilt === "denied" ? t.tiltDenied : message}
+          {message}
         </p>
       </main>
     </div>
@@ -874,7 +833,6 @@ function DeskButton({
   onPress,
   disabled,
   primary,
-  quiet,
   shortcut,
   hintFirst,
   ref,
@@ -883,7 +841,6 @@ function DeskButton({
   onPress: (event: React.MouseEvent<HTMLButtonElement>) => void;
   disabled?: boolean;
   primary?: boolean;
-  quiet?: boolean;
   /** The keys that also press this button, and the hint that names them. */
   shortcut?: DeskKey;
   /** The hint goes before the label (a "back" arrow) rather than after it. */
@@ -897,7 +854,7 @@ function DeskButton({
       type="button"
       ref={ref}
       className="botao"
-      data-variante={primary ? "principal" : quiet ? "discreto" : undefined}
+      data-variante={primary ? "principal" : undefined}
       aria-disabled={disabled || undefined}
       aria-keyshortcuts={shortcut?.keys
         .map((key) => (key.length === 1 ? key.toUpperCase() : key))
