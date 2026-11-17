@@ -108,6 +108,11 @@ const pt = {
   // Titles and snippets for tabs and search results.
   homeTitle: "Arca · Poemas de Fernando Pessoa",
   pageTitle: (title: string) => `${title} · Fernando Pessoa · Arca`,
+  // A sheet after the first, and a sheet turned over, each have a URL.
+  sheetTitle: (title: string, sheet: number) => `${title}, folha ${sheet}`,
+  backTitle: (title: string) => `${title}, verso`,
+  backDescription: (title: string) =>
+    `O verso da folha de ${title}, de Fernando Pessoa: palavras que aprendi e uma reflexão.`,
   poemDescription: (opening: string, title: string, book: string) =>
     `“${opening}” ${title}, de Fernando Pessoa (${book}).`,
   // Link previews (the image and video shown when a link is shared).
@@ -236,6 +241,10 @@ const en: Strings = {
 
   homeTitle: "Arca · Poems by Fernando Pessoa",
   pageTitle: (title) => `${title} · Fernando Pessoa · Arca`,
+  sheetTitle: (title, sheet) => `${title}, sheet ${sheet}`,
+  backTitle: (title) => `${title}, back of the sheet`,
+  backDescription: (title) =>
+    `The back of the sheet of ${title} by Fernando Pessoa: words I learned and a reflection.`,
   poemDescription: (opening, title, book) =>
     `“${opening}” ${title}, by Fernando Pessoa (${book}).`,
   previewAlt:

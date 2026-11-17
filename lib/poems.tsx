@@ -61,6 +61,8 @@ export type Poem = PoemMeta & {
   sheets: ReactNode[];
   /** The verse as plain text, one entry per line, with the markup removed. */
   lines: string[];
+  /** The same lines, grouped by sheet. */
+  sheetLines: string[][];
   /** The whole poem as plain text: stanzas apart by a blank line, no markup. */
   text: string;
 };
@@ -167,14 +169,21 @@ function readPoem(file: string): Poem {
       }))
     : [];
 
-  const sheets = content
+  const sources = content
     .split(SHEET_BREAK)
     .map((source) => source.trim())
-    .filter(Boolean)
-    .map((source, i) => {
-      const { default: Content } = evaluateSync(source, runtime);
-      return <Content key={i} components={mdxComponents} />;
-    });
+    .filter(Boolean);
+  const sheets = sources.map((source, i) => {
+    const { default: Content } = evaluateSync(source, runtime);
+    return <Content key={i} components={mdxComponents} />;
+  });
+  const sheetLines = sources.map((source) =>
+    source
+      .replace(/<[^>]+>/g, "")
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean),
+  );
   if (sheets.length === 0) fail(file, "the poem has no text");
 
   const book = data.book as Book;
@@ -191,11 +200,8 @@ function readPoem(file: string): Poem {
     facsimile,
     sheetCount: sheets.length,
     sheets,
-    lines: content
-      .replace(/<[^>]+>/g, "")
-      .split("\n")
-      .map((line) => line.trim())
-      .filter((line) => line && !SHEET_BREAK.test(line)),
+    lines: sheetLines.flat(),
+    sheetLines,
     text: content
       .replace(/<[^>]+>/g, "")
       .split("\n")

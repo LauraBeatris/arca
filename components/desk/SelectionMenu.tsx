@@ -12,7 +12,7 @@ import {
   type Ref,
 } from "react";
 import { useLang, useStrings } from "@/components/Lingua";
-import { poemPath } from "@/lib/lang";
+import { positionPath, versesHash, type Verses } from "@/lib/lang";
 
 /**
  * A small floating card that opens over verses the reader selects on a
@@ -38,6 +38,8 @@ type Target = {
   word: string | null;
   anchor: Box;
   via: "selection" | "button";
+  /** The lines selected, numbered across the poem; null for the whole sheet. */
+  verses: Verses | null;
   returnFocus: HTMLElement | null;
   /** Opened from the keyboard: no entrance animation. */
   instant: boolean;
@@ -59,27 +61,41 @@ const noSubscription = () => () => {};
 const canSpeak = () => "speechSynthesis" in window;
 const canSpeakServer = () => false;
 
+/** The part of one line of verse inside `range`, or "" when none of it is. */
+function lineIn(range: Range, line: Element): string {
+  if (!range.intersectsNode(line)) return "";
+  const part = document.createRange();
+  part.selectNodeContents(line);
+  if (range.compareBoundaryPoints(Range.START_TO_START, part) > 0) {
+    part.setStart(range.startContainer, range.startOffset);
+  }
+  if (range.compareBoundaryPoints(Range.END_TO_END, part) < 0) {
+    part.setEnd(range.endContainer, range.endOffset);
+  }
+  return part.toString().replace(/\s+/g, " ").trim();
+}
+
 /** The verse inside `range`, one line per line of verse, stanzas apart. */
 function versesIn(range: Range, container: Element): string {
   const stanzas: string[] = [];
   for (const stanza of container.querySelectorAll(".estrofe")) {
     const lines: string[] = [];
     for (const line of stanza.querySelectorAll(".verso")) {
-      if (!range.intersectsNode(line)) continue;
-      const part = document.createRange();
-      part.selectNodeContents(line);
-      if (range.compareBoundaryPoints(Range.START_TO_START, part) > 0) {
-        part.setStart(range.startContainer, range.startOffset);
-      }
-      if (range.compareBoundaryPoints(Range.END_TO_END, part) < 0) {
-        part.setEnd(range.endContainer, range.endOffset);
-      }
-      const text = part.toString().replace(/\s+/g, " ").trim();
+      const text = lineIn(range, line);
       if (text) lines.push(text);
     }
     if (lines.length) stanzas.push(lines.join("\n"));
   }
   return stanzas.join("\n\n");
+}
+
+/** The lines of the poem in `article` that `range` takes in, counted from 1. */
+function versesTouched(range: Range, article: Element): Verses | null {
+  const touched: number[] = [];
+  article.querySelectorAll(".folha .verso").forEach((line, i) => {
+    if (lineIn(range, line)) touched.push(i + 1);
+  });
+  return touched.length ? { from: touched[0], to: touched[touched.length - 1] } : null;
 }
 
 /** "fingidor," → "fingidor"; anything with a space in it → null. */
@@ -175,6 +191,7 @@ export function SelectionMenu({
           word: null,
           anchor: toBox(from.getBoundingClientRect()),
           via: "button",
+          verses: null,
           returnFocus: from,
           instant,
         });
@@ -218,6 +235,7 @@ export function SelectionMenu({
         word: singleWord(text),
         anchor,
         via: "selection",
+        verses: versesTouched(range, holder),
         returnFocus: null,
         instant: false,
       });
@@ -465,7 +483,9 @@ export function SelectionMenu({
 
   const share = async () => {
     if (!target || !poem) return;
-    const url = `${window.location.origin}${poemPath(lang, poem.slug)}`;
+    // The link opens the poem on this sheet with these lines inked.
+    const at = positionPath(lang, { slug: poem.slug, sheet: page, back: false });
+    const url = `${window.location.origin}${at}${target.verses ? versesHash(target.verses) : ""}`;
     const text = t.shareQuote(target.text, poem.title);
     if (navigator.share) {
       try {
