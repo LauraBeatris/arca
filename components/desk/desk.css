@@ -76,6 +76,15 @@
        pile's corner, above the buttons, overlapping the strip kept here.
        Plain px because the engine parses this value. */
     --sob-pilha: 44px;
+    /* The pile sits just under the label, not in the middle of the space
+       left, so the two read together. Matches the engine's pileY. */
+    --pilha-y: min(
+      calc(
+        var(--topo-medido, var(--topo)) +
+          (100dvh - var(--topo-medido, var(--topo)) - var(--barra) - var(--sob-pilha)) / 2
+      ),
+      calc(var(--topo-medido, var(--topo)) + var(--folha-h) * var(--s-pilha) / 2 + 6px)
+    );
   }
 }
 
@@ -137,13 +146,6 @@
   font-style: italic;
   opacity: 0.82;
   animation: marca-surge 900ms ease 1000ms both;
-}
-
-/* Only in English: how to read the Portuguese poems in English. */
-.mesa-topo .mesa-aviso-lingua {
-  font-size: 0.78rem;
-  font-style: normal;
-  opacity: 0.66;
 }
 
 /*
@@ -374,9 +376,6 @@
     font-size: 0.8rem;
     opacity: 0.78;
   }
-  .mesa-topo .mesa-aviso-lingua {
-    margin-top: 0.5em;
-  }
 }
 
 /* On phones the corner switches take the top row, so the label sits under
@@ -396,29 +395,11 @@
   }
 }
 
-/* With room on both sides of the buttons, the English hint leaves the label
-   and sits in the lower left corner, across from the signature. */
-@media (min-width: 960px) and (max-width: 1099.98px) {
-  .mesa-topo .mesa-aviso-lingua {
-    position: fixed;
-    left: max(20px, env(safe-area-inset-left));
-    bottom: max(20px, env(safe-area-inset-bottom));
-    display: flex;
-    align-items: center;
-    min-height: 48px;
-    max-width: 20em;
-    margin: 0;
-    font-style: italic;
-    text-align: left;
-  }
-}
-
 /*
  * With room beside the pile, only the title stays at the top, on the wood.
- * The tagline and the English hint become a note left on the desk to the
- * left of the pile, set a little off square like something written by hand.
- * They are placed separately, meeting just above the pile's middle: the
- * tagline grows upwards from there and the hint downwards.
+ * The tagline becomes a note left on the desk to the left of the pile, set
+ * a little off square like something written by hand. It grows upwards from
+ * just above the pile's middle.
  */
 @media (min-width: 1100px) {
   .etiqueta {
@@ -427,27 +408,17 @@
   .mesa-topo h1 {
     font-size: 1.45rem;
   }
-  .mesa-topo .etiqueta p,
-  .mesa-topo .mesa-aviso-lingua {
+  .mesa-topo .etiqueta p {
     position: fixed;
     right: calc(50% + var(--folha-w) * var(--s-pilha) / 2 + 48px);
     width: 12.5rem;
     line-height: 1.45;
     text-align: left;
     transform: rotate(-2.5deg);
-  }
-  .mesa-topo .etiqueta p {
     bottom: calc(100% - var(--pilha-y) + 2.2rem);
     font-size: 0.95rem;
     opacity: 0.8;
     transform-origin: 100% 100%;
-  }
-  .mesa-topo .mesa-aviso-lingua {
-    top: calc(var(--pilha-y) - 1.6rem);
-    font-size: 0.82rem;
-    font-style: italic;
-    opacity: 0.62;
-    transform-origin: 100% 0;
   }
 }
 
@@ -1151,8 +1122,7 @@
   }
 }
 
-/* Quiet switches in the top corners: sound on the right, and on touch
-   devices the lamp-by-tilt switch on the left. */
+/* Quiet switches in the top right corner: language and sound. */
 .canto {
   position: absolute;
   z-index: 100;
@@ -1161,10 +1131,6 @@
      sit level instead of sharing a text baseline. */
   display: flex;
   align-items: center;
-}
-
-.canto-esquerdo {
-  left: max(6px, env(safe-area-inset-left));
 }
 
 .canto-direito {
@@ -1439,15 +1405,6 @@
 }
 .botao[data-variante="principal"]::before {
   background: var(--creme);
-}
-
-.botao[data-variante="discreto"] {
-  padding: 0 0.7em;
-  font-size: 0.85rem;
-  font-style: italic;
-  text-decoration: underline;
-  text-decoration-color: rgb(239 230 210 / 0.4);
-  text-underline-offset: 0.25em;
 }
 
 /* The language switch: two small capitals, the same size target as the

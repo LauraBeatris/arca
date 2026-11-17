@@ -53,14 +53,11 @@ const pt = {
     cancioneiro: "Cancioneiro",
   },
 
-  tiltOn: "Inclinar a luz",
-  tiltOff: "Parar a luz",
   sound: "Som",
   soundOff: "Silenciar",
   soundOn: "Ativar som",
   candleOff: "Apagar a vela",
   candleOn: "Acender a vela",
-  tiltDenied: "Sem acesso ao movimento do aparelho.",
 
   // The menu that opens over selected verses (or from the "more" button).
   moreActions: "Mais ações",
@@ -142,8 +139,6 @@ const pt = {
     name: "English",
     hint: "Read the site in English",
   },
-  /** A line under the tagline for readers who may not read Portuguese. */
-  readingHint: "",
 };
 
 /** The same shape with every piece of copy widened to a plain string. */
@@ -197,14 +192,11 @@ const en: Strings = {
     cancioneiro: "Cancioneiro",
   },
 
-  tiltOn: "Tilt the light",
-  tiltOff: "Stop the light",
   sound: "Sound",
   soundOff: "Mute",
   soundOn: "Turn sound on",
   candleOff: "Put out the candle",
   candleOn: "Light the candle",
-  tiltDenied: "No access to the device’s motion.",
 
   moreActions: "More actions",
   selectionMenu: "Actions for the chosen lines",
@@ -274,7 +266,6 @@ const en: Strings = {
     name: "Português",
     hint: "Ler o site em português",
   },
-  readingHint: "Select any lines to read them in English.",
 };
 
 const dictionaries: Record<Lang, Strings> = { pt, en };

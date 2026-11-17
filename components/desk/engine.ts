@@ -54,7 +54,6 @@ export type EngineEvents = {
   onPage(delta: 1 | -1): void;
   /** WebGL paper became available or was lost. */
   onPaper(ready: boolean): void;
-  onTilt(state: "on" | "off" | "denied"): void;
 };
 
 const DEG = Math.PI / 180;
@@ -202,6 +201,8 @@ export class DeskEngine {
   private resizer: ResizeObserver;
   private tilt: { beta: number; gamma: number } | null = null;
   private tilting = false;
+  /** On iOS: waiting for the first tap to ask for the phone's motion. */
+  private askForTilt: (() => void) | null = null;
 
   private candleEl: HTMLElement | null = null;
   private candleX = -9999;
@@ -280,6 +281,7 @@ export class DeskEngine {
     canvas.addEventListener("webglcontextlost", this.onContextLost);
     canvas.addEventListener("webglcontextrestored", this.onContextRestored);
     this.motionQuery.addEventListener("change", this.onMotionChange);
+    this.listenForTilt();
     this.resizer = new ResizeObserver(this.onResize);
     this.resizer.observe(root);
     // The title grows when its web font arrives.
@@ -347,6 +349,12 @@ export class DeskEngine {
     this.root.style.setProperty("--s-pilha", String(this.pileScale));
     this.pileX = this.vw / 2;
     this.pileY = top + (this.vh - top - bar - under) / 2;
+    // On phones the pile sits just under the label rather than in the middle
+    // of the space left: any room to spare goes below it, by the buttons.
+    // (Matched by --pilha-y in desk.css.)
+    if (this.vw < 640) {
+      this.pileY = Math.min(this.pileY, top + (this.H * this.pileScale) / 2 + 6);
+    }
     // Land the picked-up sheet on whole pixels so its text stays sharp.
     this.pickedY =
       Math.round(Math.max(8, (this.vh - bar - this.H) / 2 + 4)) + this.H / 2;
@@ -1021,39 +1029,50 @@ export class DeskEngine {
 
   /* ----------------------------------------------------------------- tilt */
 
-  /** Must be called from a tap: iOS only grants motion access on a gesture. */
-  async enableTilt() {
-    if (this.reduced) return;
-    type Permissioned = typeof DeviceOrientationEvent & {
+  /**
+   * On phones the lamp follows the tilt of the phone, with no switch. Android
+   * just sends the readings. iOS asks the visitor first, and only in answer to
+   * a tap, so there the question comes with the first tap anywhere. Until a
+   * real reading arrives (or if the visitor says no) the finger leads the lamp.
+   */
+  private listenForTilt() {
+    if (!("DeviceOrientationEvent" in window)) return;
+    if (!window.matchMedia("(pointer: coarse)").matches) return;
+    const api = window.DeviceOrientationEvent as typeof DeviceOrientationEvent & {
       requestPermission?: () => Promise<"granted" | "denied">;
     };
-    const api = window.DeviceOrientationEvent as Permissioned | undefined;
-    if (!api) return this.events.onTilt("denied");
-    try {
-      if (typeof api.requestPermission === "function") {
-        if ((await api.requestPermission()) !== "granted") {
-          return this.events.onTilt("denied");
-        }
-      }
-    } catch {
-      return this.events.onTilt("denied");
+    const ask = api.requestPermission;
+    if (typeof ask !== "function") {
+      window.addEventListener("deviceorientation", this.onTilt);
+      return;
     }
-    this.tilt = null;
-    this.tilting = true;
-    window.addEventListener("deviceorientation", this.onTilt);
-    this.events.onTilt("on");
+    this.askForTilt = () => {
+      this.stopAskingForTilt();
+      ask.call(api).then(
+        (state) => {
+          if (state === "granted" && !this.destroyed) {
+            window.addEventListener("deviceorientation", this.onTilt);
+          }
+        },
+        () => {},
+      );
+    };
+    window.addEventListener("touchend", this.askForTilt);
+    window.addEventListener("click", this.askForTilt);
   }
 
-  disableTilt() {
-    this.tilting = false;
-    window.removeEventListener("deviceorientation", this.onTilt);
-    this.events.onTilt("off");
+  private stopAskingForTilt() {
+    if (!this.askForTilt) return;
+    window.removeEventListener("touchend", this.askForTilt);
+    window.removeEventListener("click", this.askForTilt);
+    this.askForTilt = null;
   }
 
   private onTilt = (e: DeviceOrientationEvent) => {
     if (e.beta == null || e.gamma == null || this.reduced) return;
-    // Tilt is measured from however the phone was held when tilt was turned on.
+    // Tilt is measured from however the phone was held at the first reading.
     if (!this.tilt) this.tilt = { beta: e.beta, gamma: e.gamma };
+    this.tilting = true;
     const clamp = (v: number) => Math.max(-1, Math.min(1, v));
     this.pointLamp(
       this.vw / 2 + clamp((e.gamma - this.tilt.gamma) / 24) * this.vw * 0.5,
@@ -1077,6 +1096,7 @@ export class DeskEngine {
     canvas.removeEventListener("webglcontextlost", this.onContextLost);
     canvas.removeEventListener("webglcontextrestored", this.onContextRestored);
     window.removeEventListener("deviceorientation", this.onTilt);
+    this.stopAskingForTilt();
     this.motionQuery.removeEventListener("change", this.onMotionChange);
     this.resizer.disconnect();
     this.renderer?.dispose();
