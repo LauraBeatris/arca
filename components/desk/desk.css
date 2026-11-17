@@ -438,7 +438,7 @@
   }
   .mesa-topo .etiqueta p {
     position: fixed;
-    right: calc(50% + var(--folha-w) * var(--s-pilha) / 2 + 48px);
+    right: calc(50% + var(--folha-w) * var(--s-pilha) / 2 + 36px);
     width: 12.5rem;
     line-height: 1.45;
     text-align: left;
@@ -1163,6 +1163,8 @@
 
 .canto-direito {
   right: max(6px, env(safe-area-inset-right));
+  /* Level with the title wherever the title comes down to (--desce). */
+  translate: 0 var(--desce);
 }
 
 /* -------------------------------------------------------------- signature */
