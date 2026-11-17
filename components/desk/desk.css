@@ -308,6 +308,51 @@
   }
 }
 
+/*
+ * From tablet width up, the title and the tagline share one line, so the
+ * header is a single quiet row above the pile.
+ */
+@media (min-width: 640px) {
+  .mesa-topo {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: baseline;
+    column-gap: 0;
+  }
+  .mesa-topo h1 {
+    font-size: 1.2rem;
+  }
+  .mesa-topo p:not(.mesa-aviso-lingua)::before {
+    content: "·" / "";
+    margin-inline: 0.7em;
+    font-style: normal;
+    opacity: 0.6;
+  }
+  /* Until it moves to the corner, the hint keeps its own line. */
+  .mesa-topo .mesa-aviso-lingua {
+    flex-basis: 100%;
+  }
+}
+
+/*
+ * With room on both sides of the buttons, the English hint leaves the title
+ * and sits in the lower left corner, across from the signature.
+ */
+@media (min-width: 960px) {
+  .mesa-topo .mesa-aviso-lingua {
+    position: fixed;
+    left: max(20px, env(safe-area-inset-left));
+    bottom: max(20px, env(safe-area-inset-bottom));
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+    max-width: 20em;
+    font-style: italic;
+    text-align: left;
+  }
+}
+
 /* ----------------------------------------------------------------- sheets */
 
 .pilha {
