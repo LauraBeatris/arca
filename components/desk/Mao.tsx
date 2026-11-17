@@ -63,7 +63,7 @@ export function Risco() {
  * The words of a note, each set down a little on its own, as a hand does:
  * a slight turn and lift per word, the same every time for the same note.
  */
-function Escrita({ children, seed }: { children: ReactNode; seed: string }) {
+export function Escrita({ children, seed }: { children: ReactNode; seed: string }) {
   let k = 0;
   const words = (node: ReactNode): ReactNode[] =>
     Children.toArray(node).flatMap((child) => {

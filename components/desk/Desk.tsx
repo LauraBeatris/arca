@@ -30,7 +30,7 @@ import { DeskEngine, type View } from "./engine";
 import { Assinatura } from "./Assinatura";
 import { FacsimileFigure, type DeskFacsimile } from "./Facsimile";
 import { Marca } from "./Marca";
-import { NotaTitulo } from "./Mao";
+import { Escrita, NotaTitulo, Tinta } from "./Mao";
 import { MarginNote } from "./Nota";
 import { SelectionMenu, type SelectionMenuHandle } from "./SelectionMenu";
 import { DeskSound, SOUNDS, makeNoise, playRecipe, preloadSounds, type SoundId } from "./sound";
@@ -42,6 +42,9 @@ export type DeskPoem = Omit<PoemMeta, "sheetCount" | "source" | "facsimile"> & {
 };
 
 const noSubscription = () => () => {};
+
+/** Text still waiting for Laura ("[Texto provisório: …]"): typed, never in her hand. */
+const provisional = (text: string) => /^\s*\[[\s\S]*\]\s*$/.test(text);
 
 function useMediaQuery(query: string): boolean {
   return useSyncExternalStore(
@@ -571,13 +574,35 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
                     <dl className="palavras">
                       {poem.words.map((entry, k) => (
                         <div key={k}>
-                          <dt>{entry.word}</dt>
-                          <dd>{entry.meaning}</dd>
+                          {/* In Laura's hand, unless it is still a placeholder. */}
+                          <dt className={provisional(entry.word) ? "provisorio" : "mao"}>
+                            {provisional(entry.word) ? (
+                              entry.word
+                            ) : (
+                              <span className="tinta">
+                                <Escrita seed={entry.word}>{entry.word}</Escrita>
+                                <Tinta como="sublinhado" seed={entry.word} />
+                              </span>
+                            )}
+                          </dt>
+                          <dd className={provisional(entry.meaning) ? "provisorio" : "mao"}>
+                            {provisional(entry.meaning) ? (
+                              entry.meaning
+                            ) : (
+                              <Escrita seed={entry.meaning}>{entry.meaning}</Escrita>
+                            )}
+                          </dd>
                         </div>
                       ))}
                     </dl>
                     <h4 lang={t.lang}>{t.reflectionHeading}</h4>
-                    <p className="reflexao">{poem.reflection}</p>
+                    {provisional(poem.reflection) ? (
+                      <p className="reflexao provisorio">{poem.reflection}</p>
+                    ) : (
+                      <p className="reflexao mao">
+                        <Escrita seed={poem.reflection}>{poem.reflection}</Escrita>
+                      </p>
+                    )}
                   </div>
                 </section>
 

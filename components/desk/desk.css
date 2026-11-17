@@ -907,6 +907,38 @@
   font-style: italic;
 }
 
+/* What Laura wrote on the back, in her hand and her black pen, like the
+   notes on the front. Placeholders stay typed, so they never pass for hers. */
+.verso-folha .mao {
+  color: var(--caneta);
+  font-family: var(--font-mao), "Segoe Print", "Bradley Hand", cursive;
+  font-style: normal;
+  font-feature-settings: "calt" 1;
+  line-height: 1.3;
+  opacity: 0.93;
+}
+
+.palavras dt.mao {
+  font-size: 1.22em;
+}
+
+.palavras dd.mao {
+  margin-top: 0.4em;
+  padding-left: 0.6em;
+  font-size: 1.08em;
+  opacity: 0.93;
+  rotate: -0.6deg;
+}
+
+.reflexao.mao {
+  font-size: 1.15em;
+}
+
+.verso-folha .provisorio {
+  font-style: italic;
+  opacity: 0.6;
+}
+
 /* ------------------------------------------------------------- paper clip */
 
 .clipe {
