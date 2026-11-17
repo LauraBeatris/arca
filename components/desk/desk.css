@@ -308,6 +308,44 @@
   }
 }
 
+/* Narrower screens keep the tagline and hint stacked under the title. */
+.nota {
+  display: contents;
+}
+
+/*
+ * With room beside the pile, only the title stays at the top. The tagline
+ * and the English hint become a note left on the desk to the left of the
+ * pile, set a little off square like something written by hand.
+ */
+@media (min-width: 1100px) {
+  .mesa-topo h1 {
+    font-size: 1.45rem;
+  }
+  .mesa-topo .nota {
+    position: fixed;
+    top: calc(var(--pilha-y) - 5em);
+    right: calc(50% + var(--folha-w) * var(--s-pilha) / 2 + 48px);
+    display: flex;
+    flex-direction: column;
+    gap: 0.7em;
+    width: 12.5em;
+    text-align: left;
+    transform: rotate(-2.5deg);
+    transform-origin: 100% 0;
+  }
+  .mesa-topo .nota p {
+    font-size: 0.95rem;
+    line-height: 1.45;
+    opacity: 0.8;
+  }
+  .mesa-topo .nota .mesa-aviso-lingua {
+    font-size: 0.82rem;
+    font-style: italic;
+    opacity: 0.62;
+  }
+}
+
 /* ----------------------------------------------------------------- sheets */
 
 .pilha {

@@ -336,8 +336,13 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
             ))}
           </span>
         </h1>
-        <p>{t.tagline}</p>
-        {t.readingHint && <p className="mesa-aviso-lingua">{t.readingHint}</p>}
+        {/* On wide screens, a note left on the desk beside the pile. */}
+        <div className="nota">
+          <p>{t.tagline}</p>
+          {t.readingHint && (
+            <p className="mesa-aviso-lingua">{t.readingHint}</p>
+          )}
+        </div>
       </header>
 
       <main>
