@@ -1,11 +1,11 @@
 /**
  * Desk sounds: paper sliding, lifting, landing, turning, and the candle.
  *
- * Most sounds are made here rather than recorded: each one is shaped noise (a
- * `rustle` is the hiss of paper moving, a `thump` is it landing). A sound can
- * instead name recordings in `src` (files in `public/sounds/`); each play then
- * picks one of them, and the recipe is only the fallback while they load or
- * if they fail.
+ * Every paper sound plays a recording of real paper, named in `src` (files in
+ * `public/sounds/`); each play picks one of them. Each sound also has a
+ * `recipe` of shaped noise (a `rustle` is the hiss of paper moving, a `thump`
+ * is it landing), played while the recordings load or if they fail. The candle
+ * has only its recipe.
  *
  * Sounds only ever play in answer to something the visitor did, they are
  * short and quiet, and they can be turned off (see `lib/prefs.ts`).
@@ -63,44 +63,54 @@ type Sound = {
   recipe: Layer[];
 };
 
+// Every paper sound is a recording of real paper. All are CC0 (public domain)
+// from Freesound, trimmed, high-passed at 150 Hz to take out room rumble,
+// faded and levelled to match each other:
+//   slide-1..3, slide-back-1..2  freesound.org/s/451411  "foley paper sheet of white paper slide around", kyles
+//   lift-1                       freesound.org/s/509878  "pickup_paper", slamaxu
+//   lift-2                       freesound.org/s/463689  "Picking up one paper", usamah
+//   drop-1                       freesound.org/s/873835  "Straightening Sheet of Paper", qubodup
+//   drop-2                       freesound.org/s/379888  "01_pokladani_papiru_na_lavici", 13GPanska_Markova_Lucie
+//   page-1, page-2, page-back-2  freesound.org/s/656546  "Page Turn", IENBA
+//   page-3                       freesound.org/s/858468  "Flipping Page Forward", Ym_The_Cosmic
+//   page-back-1                  freesound.org/s/858467  "Flipping Page Back", Ym_The_Cosmic
+//   page-back-3                  freesound.org/s/676674  "Page flip", cameronpride
+//   flip-1                       freesound.org/s/856497  "Turning page (heavy paper)", xkeril
+// A drop's loudest moment sits about a quarter of a second in, where the sheet
+// lands in the animation.
 export const SOUNDS: Record<SoundId, Sound> = {
   slide: {
+    src: ["/sounds/slide-1.mp3", "/sounds/slide-2.mp3", "/sounds/slide-3.mp3"],
     recipe: [
       { kind: "rustle", dur: 0.28, gain: 0.085, from: 2200, to: 5200, q: 0.8, crackle: 0.25, attack: 0.05 },
     ],
   },
   slideBack: {
+    src: ["/sounds/slide-back-1.mp3", "/sounds/slide-back-2.mp3"],
     recipe: [
       { kind: "rustle", dur: 0.28, gain: 0.085, from: 5000, to: 2300, q: 0.8, crackle: 0.25, attack: 0.05 },
       { kind: "thump", at: 0.24, dur: 0.07, gain: 0.07, cutoff: 180 },
     ],
   },
   lift: {
+    src: ["/sounds/lift-1.mp3", "/sounds/lift-2.mp3"],
     recipe: [
       { kind: "rustle", dur: 0.16, gain: 0.1, from: 3000, to: 6400, q: 1, crackle: 0.6, attack: 0.012 },
       { kind: "rustle", at: 0.08, dur: 0.11, gain: 0.05, from: 5200, to: 3400, q: 1, crackle: 0.5, attack: 0.01 },
     ],
   },
   drop: {
+    src: ["/sounds/drop-1.mp3", "/sounds/drop-2.mp3"],
     recipe: [
       { kind: "rustle", at: 0.05, dur: 0.16, gain: 0.05, from: 4200, to: 2600, q: 0.8, crackle: 0.3, attack: 0.03 },
       { kind: "thump", at: 0.26, dur: 0.085, gain: 0.15, cutoff: 170 },
       { kind: "rustle", at: 0.26, dur: 0.08, gain: 0.05, from: 2600, to: 1800, q: 0.9, crackle: 0.3, attack: 0.004 },
     ],
   },
-  // Page turns are recordings of real books. All are CC0 (public domain)
-  // from Freesound, trimmed, high-passed at 150 Hz to take out room rumble and
-  // levelled to the synthesised sounds:
-  //   page-1, page-2      freesound.org/s/656546  "Page Turn", IENBA
-  //   page-3              freesound.org/s/858468  "Flipping Page Forward", Ym_The_Cosmic
-  //   page-back-1         freesound.org/s/858467  "Flipping Page Back", Ym_The_Cosmic
-  //   page-back-2         freesound.org/s/656546  "Page Turn", IENBA
-  //   page-back-3         freesound.org/s/676674  "Page flip", cameronpride
-  //   flip-1              freesound.org/s/856497  "Turning page (heavy paper)", xkeril
-  // The recipes are the fallback: one continuous, airy swish. A soft, bright
-  // brush as the corner lifts, a breath while it rises, the broad sweep as it
-  // falls (most of it around 2 kHz, with a little low air pushed ahead of it),
-  // and a tail that darkens as the page settles.
+  // The page recipe: one continuous, airy swish. A soft, bright brush as the
+  // corner lifts, a breath while it rises, the broad sweep as it falls (most of
+  // it around 2 kHz, with a little low air pushed ahead of it), and a tail that
+  // darkens as the page settles.
   page: {
     src: ["/sounds/page-1.mp3", "/sounds/page-2.mp3", "/sounds/page-3.mp3"],
     recipe: [
