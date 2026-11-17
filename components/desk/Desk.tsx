@@ -416,8 +416,7 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
 
       <header className="mesa-topo">
         {/* A small cream label on the desk, like a bookplate. On wide screens
-            only the title stays at the top and the tagline becomes a note
-            beside the pile (desk.css). */}
+            only the title stays, on the wood (desk.css). */}
         <div className="etiqueta">
           <h1>
             <Marca />
