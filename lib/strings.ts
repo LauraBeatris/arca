@@ -42,6 +42,12 @@ const pt = {
   backPrefix: "Verso da folha:",
   wordsHeading: "Palavras que aprendi",
   reflectionHeading: "Reflexão",
+  // A scan of Pessoa's own page, set into the back like a figure in a book.
+  facsimileFigure: (n: number) => `fig. ${n}`,
+  facsimileAlt: (title: string) => `Página do espólio de Fernando Pessoa: ${title}`,
+  facsimileOpen: (title: string) => `Ampliar a página original de ${title}`,
+  facsimileSource: "Fonte",
+  facsimileClose: "Fechar",
   bookName: {
     mensagem: "Mensagem",
     cancioneiro: "Cancioneiro",
@@ -162,6 +168,11 @@ const en: Strings = {
   backPrefix: "Back of the sheet:",
   wordsHeading: "Words I learned",
   reflectionHeading: "Reflection",
+  facsimileFigure: (n) => `fig. ${n}`,
+  facsimileAlt: (title) => `A page from Fernando Pessoa’s papers: ${title}`,
+  facsimileOpen: (title) => `Enlarge the original page of ${title}`,
+  facsimileSource: "Source",
+  facsimileClose: "Close",
   // Book titles stay as Pessoa named them.
   bookName: {
     mensagem: "Mensagem",

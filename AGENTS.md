@@ -13,7 +13,10 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 Poems are MDX files in `content/poems/` (see `README.md` and the comment at the
 top of `lib/poems.tsx` for the frontmatter). Optional fields the README leaves
 out: `numeral` (the poem's number in its book), `paper` (`carta` | `maquina`,
-overrides the book's paper), `source` (URL the text came from). Inside a poem,
+overrides the book's paper), `source` (URL the text came from), `facsimile`
+(`{ src, source, caption? }`: a scan of Pessoa's page shown as a numbered figure
+on the back; `src` is a file in `public/` or a host listed in
+`lib/facsimiles.ts`, `source` is the scan's credit URL). Inside a poem,
 `<Mark note="…">word</Mark>` marks a word; in v1 it renders as plain text.
 
 Where things live:

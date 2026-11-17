@@ -71,6 +71,10 @@ words:
   - word: enleio
     meaning: …
 reflection: …
+facsimile:               # optional: a scan of pessoa's own page, on the back
+  src: /facsimiles/isto.jpg   # a file in public/, or a host in lib/facsimiles.ts
+  source: https://…           # where the scan comes from (bnp, arquivo pessoa)
+  caption: …                  # optional, in portuguese
 ---
 
 one stanza per paragraph,

@@ -26,13 +26,15 @@ import {
 import { formatDate } from "@/lib/strings";
 import { DeskEngine, type View } from "./engine";
 import { Assinatura } from "./Assinatura";
+import { FacsimileFigure, type DeskFacsimile } from "./Facsimile";
 import { Marca } from "./Marca";
 import { SelectionMenu, type SelectionMenuHandle } from "./SelectionMenu";
 import { DeskSound, SOUNDS, makeNoise, playRecipe, type SoundId } from "./sound";
 import "./desk.css";
 
-export type DeskPoem = Omit<PoemMeta, "sheetCount" | "source"> & {
+export type DeskPoem = Omit<PoemMeta, "sheetCount" | "source" | "facsimile"> & {
   sheets: ReactNode[];
+  facsimile?: DeskFacsimile;
 };
 
 const noSubscription = () => () => {};
@@ -456,6 +458,13 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
                       {t.markedOn}{" "}
                       <time dateTime={poem.markedAt}>{formatDate(poem.markedAt, t)}</time>
                     </p>
+                    {poem.facsimile && (
+                      <FacsimileFigure
+                        facsimile={poem.facsimile}
+                        title={poem.title}
+                        active={isPicked}
+                      />
+                    )}
                     <h4 lang={t.lang}>{t.wordsHeading}</h4>
                     <dl className="palavras">
                       {poem.words.map((entry, k) => (
