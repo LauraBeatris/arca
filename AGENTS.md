@@ -35,8 +35,11 @@ Where things live:
 | `scripts/og-video.mjs` | Records those previews from the real desk (`pnpm og`, against `pnpm start --port 3211`); rerun after adding a poem or changing the desk's look |
 
 One WebGL canvas draws the desk, every sheet and the shadows. The engine writes
-the same matrix to each HTML sheet and to its paper quad. The picked-up poem
-lives in the URL (`/poema/<slug>`) through `history.pushState`.
+the same matrix to each HTML sheet and to its paper quad. The reading position
+lives in the URL: `/poema/<slug>[/<sheet>][/verso]`, plus `#v3-5` for lines
+numbered across the whole poem (helpers in `lib/lang.ts`). Picking up and
+putting down use `history.pushState`; turning pages and flipping use
+`replaceState`, so Back puts the sheet down.
 
 The interface comes in Portuguese (plain URLs) and English (under `/en`). All
 routes live in `app/[lang]/`; `proxy.ts` rewrites plain URLs to `/pt/...` and

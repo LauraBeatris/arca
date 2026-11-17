@@ -467,6 +467,79 @@
   text-indent: -1.6em;
 }
 
+/* Lines named by a shared link (#v3-5) are washed in Laura's cobalt ink for
+   a moment: drawn across line by line like a pen stroke, then left to dry
+   away. The wash is a background, under the letters. */
+@property --tinta-a {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
+
+.verso[data-tinta] {
+  width: fit-content;
+  margin-inline: -0.2em;
+  padding-inline: 0.2em;
+  padding-left: calc(1.6em + 0.2em);
+  border-radius: 0.25em 0.5em 0.35em 0.6em / 0.45em 0.3em 0.5em 0.25em;
+  background: linear-gradient(
+      rgb(29 70 166 / calc(var(--tinta-a) * 0.24)),
+      rgb(29 70 166 / calc(var(--tinta-a) * 0.3))
+    )
+    no-repeat 0 0 / 100% 100%;
+  animation: tinta 4.2s calc(var(--k, 0) * 140ms) both;
+}
+
+.verso[data-tinta]:focus {
+  outline: none;
+}
+
+@keyframes tinta {
+  0% {
+    --tinta-a: 1;
+    background-size: 0% 100%;
+    animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  16% {
+    --tinta-a: 1;
+    background-size: 100% 100%;
+  }
+  70% {
+    --tinta-a: 1;
+    animation-timing-function: ease-in-out;
+  }
+  100% {
+    --tinta-a: 0;
+    background-size: 100% 100%;
+  }
+}
+
+@keyframes tinta-esbate {
+  0% {
+    --tinta-a: 0;
+  }
+  10%,
+  70% {
+    --tinta-a: 1;
+  }
+  100% {
+    --tinta-a: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The ink only fades in and out, all lines at once. */
+  .verso[data-tinta] {
+    animation: tinta-esbate 4.2s ease both;
+  }
+}
+
+@media (forced-colors: active) {
+  .verso[data-tinta] {
+    outline: 2px solid Highlight;
+  }
+}
+
 .rodape {
   display: flex;
   align-items: baseline;

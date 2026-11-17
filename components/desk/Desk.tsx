@@ -18,9 +18,11 @@ import { useLang, useStrings } from "@/components/Lingua";
 import {
   homePath,
   poemPath,
+  positionFromPath,
+  positionPath,
   rememberLang,
-  slugFromPath,
   switchPath,
+  versesFromHash,
   type Lang,
 } from "@/lib/lang";
 import { formatDate } from "@/lib/strings";
@@ -65,8 +67,12 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
   const otherLang: Lang = lang === "en" ? "pt" : "en";
   const total = poems.length;
   const pathname = usePathname();
+  // The URL says which poem is picked up, which sheet is in front and which
+  // side is up. A sheet the poem does not have picks nothing up.
+  const position = positionFromPath(pathname);
   const pickedIndex = poems.findIndex(
-    (poem) => poem.slug === slugFromPath(pathname),
+    (poem) =>
+      poem.slug === position?.slug && position.sheet < poem.sheets.length,
   );
   const picked = pickedIndex >= 0;
   const pickedSlug = picked ? poems[pickedIndex].slug : null;
@@ -76,12 +82,8 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
   if (picked && topState !== pickedIndex) setTop(pickedIndex);
   const top = picked ? pickedIndex : topState;
 
-  const [side, setSide] = useState({ slug: pickedSlug, page: 0, flipped: false });
-  if (side.slug !== pickedSlug) {
-    setSide({ slug: pickedSlug, page: 0, flipped: false });
-  }
-  const page = side.slug === pickedSlug ? side.page : 0;
-  const flipped = side.slug === pickedSlug ? side.flipped : false;
+  const page = picked && position ? position.sheet : 0;
+  const flipped = picked && position ? position.back : false;
 
   const [paper, setPaper] = useState(false);
   const [tilt, setTilt] = useState<"on" | "off" | "denied">("off");
@@ -145,23 +147,33 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
     play("drop");
   }, [picked, play, lang, t]);
 
+  // Turning pages and turning the sheet over only replace the URL: Back
+  // still puts the sheet down rather than leafing back through it.
   const turn = useCallback(
     (delta: 1 | -1) => {
-      if (!picked || flipped) return;
+      if (!pickedSlug || flipped) return;
       const to = Math.max(0, Math.min(sheetCount - 1, page + delta));
       if (to === page) return;
-      setSide({ slug: pickedSlug, page: to, flipped: false });
+      window.history.replaceState(
+        null,
+        "",
+        positionPath(lang, { slug: pickedSlug, sheet: to, back: false }),
+      );
       setMessage(t.pagePosition(to + 1, sheetCount));
       play(delta > 0 ? "page" : "pageBack");
     },
-    [picked, flipped, page, sheetCount, pickedSlug, play, t],
+    [flipped, page, sheetCount, pickedSlug, play, lang, t],
   );
 
   const flip = useCallback(() => {
-    if (!picked) return;
-    setSide({ slug: pickedSlug, page, flipped: !flipped });
+    if (!pickedSlug) return;
+    window.history.replaceState(
+      null,
+      "",
+      positionPath(lang, { slug: pickedSlug, sheet: page, back: !flipped }),
+    );
     play("flip");
-  }, [picked, pickedSlug, page, flipped, play]);
+  }, [pickedSlug, page, flipped, play, lang]);
 
   const toggleCandle = useCallback(() => {
     const lit = !prefs.get().candle;
@@ -247,7 +259,11 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
     () => (picked && !flipped ? { slug: current.slug, title: current.title } : null),
     [picked, flipped, current.slug, current.title],
   );
-  const before = useRef({ pickedSlug, flipped });
+  // Arriving at a poem's URL counts as picking it up: focus goes to it.
+  const before = useRef<{ pickedSlug: string | null; flipped: boolean }>({
+    pickedSlug: null,
+    flipped: false,
+  });
 
   useEffect(() => {
     const was = before.current;
@@ -255,16 +271,88 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
     const focus = (el?: HTMLElement | null) => el?.focus({ preventScroll: true });
     if (was.pickedSlug !== pickedSlug) {
       // Picked up: go to the poem. Put down: back to where it was picked up.
-      if (pickedSlug) focus(headings.current.get(pickedSlug));
+      if (pickedSlug) focus((flipped ? backHeadings : headings).current.get(pickedSlug));
       else focus(pickUpButton.current);
     } else if (was.flipped !== flipped && pickedSlug) {
       focus((flipped ? backHeadings : headings).current.get(pickedSlug));
     }
   }, [pickedSlug, flipped]);
 
+  /* ---------------------------------------------------------------- verses */
+
+  // A link to some lines (`#v3-5`, see `lib/lang.ts`) brings their sheet to
+  // the front, washes them in ink for a moment and puts focus on the first.
+  const inkTimer = useRef(0);
+  const inkVerses = useCallback(() => {
+    window.clearTimeout(inkTimer.current);
+    const verses = versesFromHash(window.location.hash);
+    const article = rootRef.current?.querySelector(".poema[data-pegado]");
+    for (const line of rootRef.current?.querySelectorAll("[data-tinta]") ?? []) {
+      line.removeAttribute("data-tinta");
+    }
+    if (!verses || !article || !pickedSlug) return;
+    const sheets = Array.from(article.querySelectorAll(".folha"));
+    const lines = Array.from(article.querySelectorAll<HTMLElement>(".folha .verso"));
+    const first = lines[verses.from - 1];
+    if (!first) return;
+    const sheet = sheets.findIndex((el) => el.contains(first));
+    // Only one sheet is in front, so a range that runs on stops at its end.
+    const chosen = lines
+      .slice(verses.from - 1, verses.to)
+      .filter((line) => sheets[sheet].contains(line));
+    const moves = sheet !== page || flipped;
+    if (moves) {
+      const path = positionPath(lang, { slug: pickedSlug, sheet, back: false });
+      window.history.replaceState(null, "", path + window.location.hash);
+    }
+    // Let the sheet come to the front before the ink goes on.
+    inkTimer.current = window.setTimeout(
+      () => {
+        chosen.forEach((line, k) => {
+          line.removeAttribute("data-tinta");
+          void line.offsetWidth; // so the same lines can be inked again
+          line.style.setProperty("--k", String(k));
+          line.setAttribute("data-tinta", "");
+        });
+        first.tabIndex = -1;
+        first.addEventListener("blur", () => first.removeAttribute("tabindex"), {
+          once: true,
+        });
+        first.focus({ preventScroll: true });
+        inkTimer.current = window.setTimeout(() => {
+          chosen.forEach((line) => line.removeAttribute("data-tinta"));
+        }, 6000);
+      },
+      moves ? 700 : 300,
+    );
+  }, [pickedSlug, page, flipped, lang]);
+
+  const inkLive = useRef(inkVerses);
   useEffect(() => {
-    document.title = picked ? t.pageTitle(current.title) : t.homeTitle;
-  }, [picked, current.title, t]);
+    inkLive.current = inkVerses;
+  });
+  // On arrival, on coming back to a poem with Back or Forward, and when only
+  // the fragment changes.
+  useEffect(() => {
+    if (pickedSlug) inkLive.current();
+  }, [pickedSlug]);
+  useEffect(() => {
+    const onHash = () => inkLive.current();
+    window.addEventListener("hashchange", onHash);
+    return () => {
+      window.removeEventListener("hashchange", onHash);
+      window.clearTimeout(inkTimer.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    const name = flipped
+      ? t.backTitle(current.title)
+      : page > 0
+        ? t.sheetTitle(current.title, page + 1)
+        : current.title;
+    document.title = picked ? t.pageTitle(name) : t.homeTitle;
+  }, [picked, page, flipped, current.title, t]);
 
   /* ------------------------------------------------------------------ keys */
 
