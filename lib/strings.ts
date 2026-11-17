@@ -14,6 +14,8 @@ const pt = {
   locale: "pt-PT",
   siteTitle: "Arca",
   tagline: "Poemas de Fernando Pessoa, marcados ao ler.",
+  /** Under the title on the desk, which names the author above it. */
+  subtitle: "Poemas marcados ao ler",
   description:
     "Uma pilha de folhas soltas: os poemas de Fernando Pessoa que fui marcando no Cancioneiro e na Mensagem.",
   author: "Fernando Pessoa",
@@ -136,6 +138,7 @@ const en: Strings = {
   locale: "en-US",
   siteTitle: "Arca",
   tagline: "Poems by Fernando Pessoa, marked while reading.",
+  subtitle: "Poems marked while reading",
   description:
     "A pile of loose sheets: the poems by Fernando Pessoa I’ve been marking in the Cancioneiro and in Mensagem.",
   author: "Fernando Pessoa",

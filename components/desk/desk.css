@@ -308,6 +308,69 @@
   }
 }
 
+/*
+ * Laid out like a book's title page: the author's name small above, the
+ * title, a short rule, and what the book is.
+ */
+.mesa-topo .mesa-autor {
+  font-size: 0.68rem;
+  font-style: normal;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  /* Letter-spacing adds a gap after the last letter; this re-centres it. */
+  padding-left: 0.3em;
+  opacity: 0.72;
+  animation-delay: 150ms;
+  /* Clear of the mark's lid, which stands taller than the letters. */
+  margin-bottom: 0.7em;
+}
+
+.mesa-topo h1 {
+  font-size: 1.6rem;
+}
+
+.mesa-topo .mesa-subtitulo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45em;
+}
+
+.mesa-topo .mesa-subtitulo::before {
+  content: "";
+  width: 2.2em;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.5;
+}
+
+@media (max-width: 639px) {
+  .mesa-topo h1 {
+    font-size: 1.3rem;
+  }
+  .mesa-topo .mesa-autor {
+    font-size: 0.62rem;
+  }
+}
+
+/*
+ * With room on both sides of the buttons, the English hint leaves the title
+ * and sits in the lower left corner, across from the signature.
+ */
+@media (min-width: 960px) {
+  .mesa-topo .mesa-aviso-lingua {
+    position: fixed;
+    left: max(20px, env(safe-area-inset-left));
+    bottom: max(20px, env(safe-area-inset-bottom));
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+    max-width: 20em;
+    font-style: italic;
+    text-align: left;
+  }
+}
+
 /* ----------------------------------------------------------------- sheets */
 
 .pilha {

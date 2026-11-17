@@ -321,6 +321,7 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
       <canvas className="mesa-papel" ref={canvasRef} aria-hidden="true" />
 
       <header className="mesa-topo">
+        <p className="mesa-autor">{t.author}</p>
         <h1>
           <Marca />
           <span className="sr-only">{t.siteTitle}</span>
@@ -336,7 +337,7 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
             ))}
           </span>
         </h1>
-        <p>{t.tagline}</p>
+        <p className="mesa-subtitulo">{t.subtitle}</p>
         {t.readingHint && <p className="mesa-aviso-lingua">{t.readingHint}</p>}
       </header>
 
