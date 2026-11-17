@@ -47,6 +47,7 @@ Where things live:
 | `scripts/letra/` | Builds her handwriting font from photos of her pages |
 | `lib/og.ts` | Link previews: `og:video` + `og:image` per page and language |
 | `scripts/og-video.mjs` | Records those previews from the real desk (`pnpm og`, against `pnpm start --port 3211`); rerun after adding a poem or changing the desk's look |
+| `scripts/papel-fallback.mjs` | Bakes the paper and wood the server sends before WebGL draws (`public/papel/`, `pnpm papel` against `pnpm dev`); rerun after changing the paper, wood or lighting shaders |
 | `lib/llms.ts`, `app/llms.txt/`, `app/llms-full.txt/` | `/llms.txt` (site, how it works, every poem's links) and `/llms-full.txt` (plus the texts) for AI agents, built from the poems |
 
 One WebGL canvas draws the desk, every sheet and the shadows. The engine writes

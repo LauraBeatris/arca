@@ -29,9 +29,36 @@
   position: fixed;
   inset: 0;
   overflow: hidden;
-  background: radial-gradient(120% 90% at 30% 20%, #6b452a 0%, #452b18 55%, #2a1a0e 100%);
+  /* Before WebGL draws the desk (and when it can't): the same wood, on the
+     same 1500px grid, with the lamp at rest falling off around it. The
+     stops come from scripts/papel-fallback.mjs. --luz is the shader's
+     falloff distance. */
+  --luz: max(620px, 95vmin);
+  --escuro: rgb(255 255 255);
+  background:
+    linear-gradient(var(--escuro), var(--escuro)),
+    radial-gradient(
+      circle at calc(50% - min(30vw, 330px)) calc(var(--pilha-y) - min(30vh, 270px)),
+      rgb(255 255 255) 0,
+      rgb(233 234 236) calc(var(--luz) * 0.25),
+      rgb(196 198 204) calc(var(--luz) * 0.5),
+      rgb(165 169 177) calc(var(--luz) * 0.75),
+      rgb(142 147 158) var(--luz),
+      rgb(115 121 134) calc(var(--luz) * 1.5),
+      rgb(101 108 122) calc(var(--luz) * 2),
+      rgb(89 96 111) calc(var(--luz) * 3),
+      rgb(84 91 107) calc(var(--luz) * 4)
+    ),
+    url("/papel/madeira.webp") 0 0 / 1500px 1500px,
+    var(--madeira);
+  background-blend-mode: multiply, multiply, normal;
   --vela: clamp(52px, 5.4vw, 74px);
   color: var(--creme);
+}
+
+/* A sheet picked up: the desk and the pile fall back into the dark. */
+.mesa[data-pegada] {
+  --escuro: rgb(140 140 140);
 }
 
 /* Narrower than this the buttons take two rows. */
@@ -477,9 +504,14 @@
 }
 
 /* The paper the server sends, for the moment before WebGL draws it (and for
-   good when it can't): the lit colour of the canvas paper with its grain
-   baked in (public/papel/, made by scripts/papel-fallback.mjs). It is a
-   layer of its own so it can fade out whole, grain and shadow included. */
+   good when it can't). Layers, top to bottom: the candle's warmth, the
+   lamp at rest glowing in from the top left, a tone that darkens the paper
+   where the lamp falls off, and the canvas paper's own grain and colour
+   (public/papel/, made by scripts/papel-fallback.mjs; one tile covers 640px
+   of sheet, as PAPER_TILE_PX in the renderer). The glows were matched to
+   the canvas by eye and by sampling it. It is a layer of its own so it can
+   fade out whole, grain and shadow included. Distances are screen px,
+   divided by the pile's scale because this layer is drawn in sheet px. */
 .folha::before,
 .verso-folha::before {
   content: "";
@@ -487,12 +519,62 @@
   inset: 0;
   z-index: -1;
   border-radius: inherit;
-  background: var(--papel) var(--grao) 0 0 / var(--grao-px) var(--grao-px);
+  --lampada: calc(50% - min(30vw, 330px) / var(--s-pilha))
+    calc(50% - min(30vh, 270px) / var(--s-pilha));
+  --luz-folha: radial-gradient(
+    circle at var(--lampada),
+    rgb(var(--brilho) / 0.95) 0,
+    rgb(var(--brilho) / 0.86) calc(160px / var(--s-pilha)),
+    rgb(var(--brilho) / 0.5) calc(300px / var(--s-pilha)),
+    rgb(var(--brilho) / 0.28) calc(410px / var(--s-pilha)),
+    rgb(var(--brilho) / 0) calc(520px / var(--s-pilha))
+  );
+  --tom: rgb(255 255 255);
+  background:
+    var(--calor, linear-gradient(transparent, transparent)),
+    var(--luz-folha),
+    linear-gradient(var(--tom), var(--tom)),
+    var(--grao, none) 0 0 / 640px 640px,
+    var(--papel);
+  background-blend-mode: normal, normal, multiply, normal, normal;
   box-shadow:
-    0 1px 2px rgb(0 0 0 / 0.4),
-    0 10px 28px rgb(0 0 0 / 0.35);
+    0 1px 2px rgb(0 0 0 / 0.35),
+    0 8px 22px rgb(0 0 0 / 0.25);
   pointer-events: none;
   transition: opacity 0.35s ease;
+}
+
+/* Picked up, the sheet is bigger and nearer the middle: the lamp sits
+   higher up its left side and falls off further across it. */
+.poema[data-pegado] .folha::before {
+  --luz-folha: radial-gradient(
+    circle at calc(50% - min(30vw, 330px))
+      calc(50% - min(30vh, 270px) + var(--pilha-y) - var(--pegada-y)),
+    rgb(var(--brilho) / 0.95) 0,
+    rgb(var(--brilho) / 0.89) 150px,
+    rgb(var(--brilho) / 0.64) 240px,
+    rgb(var(--brilho) / 0.5) 345px,
+    rgb(var(--brilho) / 0.16) 570px,
+    rgb(var(--brilho) / 0.05) 635px,
+    rgb(var(--brilho) / 0) 760px
+  );
+  --tom: var(--tom-pegada);
+}
+
+.mesa[data-pegada] .poema:not([data-pegado]) .folha::before {
+  filter: brightness(0.36);
+}
+
+/* The candle stands at the pile's lower right and warms that corner. */
+.mesa:not([data-pegada]) .poema[data-rank="topo"] .folha::before {
+  --calor: radial-gradient(
+    circle at 104% 85%,
+    rgb(255 188 118 / 0.96) 0,
+    rgb(255 188 118 / 0.88) calc(60px / var(--s-pilha)),
+    rgb(255 188 118 / 0.4) calc(120px / var(--s-pilha)),
+    rgb(255 188 118 / 0.12) calc(190px / var(--s-pilha)),
+    rgb(255 188 118 / 0) calc(240px / var(--s-pilha))
+  );
 }
 
 /* With WebGL the paper is drawn on the canvas underneath, lit by the lamp. */
@@ -835,7 +917,10 @@
 /* ---- Mensagem: cream cotton card, letterpress (ink pressed into the page) */
 
 .papel-carta {
-  --papel: #e9dfc6;
+  --papel: rgb(183 163 131);
+  --grao: url("/papel/carta.webp");
+  --brilho: 255 226 174;
+  --tom-pegada: rgb(202 208 216);
   --tinta: #1c1814;
 }
 
@@ -856,7 +941,10 @@
 /* ---------- Cancioneiro: thin typewriter paper, uneven ribbon ink */
 
 .papel-maquina {
-  --papel: #e3ddcd;
+  --papel: rgb(177 163 140);
+  --grao: url("/papel/maquina.webp");
+  --brilho: 235 226 198;
+  --tom-pegada: rgb(194 204 213);
   --tinta: #1f1e24;
   /* Ink density across the ribbon: darker and paler patches. */
   --fita: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.035 0.42' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.118 0 0 0 0 0.112 0 0 0 0 0.142 0 0 0 -0.7 1.3'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23f)'/%3E%3C/svg%3E");

@@ -184,7 +184,8 @@ export class DeskEngine {
 
   private lampX = new Spring(0, 70, 16, 0.2);
   private lampY = new Spring(0, 70, 16, 0.2);
-  private lampOn = 0;
+  /** True once the canvas has drawn a frame and the HTML paper can step aside. */
+  private paperShown = false;
   private lampMoved = false;
   private fade = 1;
   private fadeDir = 0;
@@ -460,11 +461,6 @@ export class DeskEngine {
       active = this.lampX.step(dt / steps) || active;
       active = this.lampY.step(dt / steps) || active;
       active = this.candleGlow.step(dt / steps) || active;
-    }
-
-    if (this.renderer && this.lampOn < 1) {
-      this.lampOn = this.reduced ? 1 : Math.min(1, this.lampOn + dt / 1.1);
-      active = true;
     }
 
     if (this.toneT < 1) {
@@ -757,14 +753,21 @@ export class DeskEngine {
       width: this.vw,
       height: this.vh,
       light: lamp,
-      lampOn: this.lampOn,
+      // The lamp is already on when the page opens: the paper the server sent
+      // is drawn lit (desk.css), so the first frame matches it, not dark.
+      lampOn: 1,
       candle: [this.candleX, this.candleY, CANDLE_HEIGHT],
-      candleOn: flame * this.lampOn,
+      candleOn: flame,
       deskDim: 0.55 + 0.45 * smooth(PILE_DIM, 1, deskDim),
       lampTint: [tone[0], tone[1], tone[2]],
       deskTint: [tone[3], tone[4], tone[5]],
       quads,
     });
+    // Only now is there paper on the canvas to show under the text.
+    if (!this.paperShown) {
+      this.paperShown = true;
+      this.events.onPaper(true);
+    }
   }
 
   /* ---------------------------------------------------------------- paper */
@@ -774,8 +777,6 @@ export class DeskEngine {
       this.renderer = new PaperRenderer(this.canvas);
       this.renderer.onChange = () => this.invalidate();
       this.renderer.resize(this.vw, this.vh, Math.min(window.devicePixelRatio || 1, 2));
-      if (this.reduced) this.lampOn = 1;
-      this.events.onPaper(true);
     } catch (error) {
       this.renderer = null;
       this.events.onPaper(false);
@@ -786,6 +787,7 @@ export class DeskEngine {
   private onContextLost = (event: Event) => {
     event.preventDefault();
     this.renderer = null;
+    this.paperShown = false;
     this.events.onPaper(false);
   };
 
@@ -810,7 +812,6 @@ export class DeskEngine {
   private onMotionChange = () => {
     this.reduced = this.motionQuery.matches;
     if (this.reduced) {
-      this.lampOn = this.renderer ? 1 : 0;
       this.lampMoved = false;
       this.lampX.snap(this.restLamp()[0]);
       this.lampY.snap(this.restLamp()[1]);

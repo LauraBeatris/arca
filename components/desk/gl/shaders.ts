@@ -258,7 +258,7 @@ void main() {
 
 const LIGHT = /* glsl */ `
 uniform vec3 uLight;      // lamp position, world px
-uniform float uLampOn;    // 0..1, the lamp warming up
+uniform float uLampOn;    // 0..1, how much the lamp is on
 uniform float uFalloff;   // px at which the lamp has halved
 uniform vec3 uCandle;     // candle flame position, world px
 uniform float uCandleOn;  // 0..1, flickers
