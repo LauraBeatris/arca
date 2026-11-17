@@ -256,7 +256,6 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
 
   const headings = useRef(new Map<string, HTMLElement>());
   const backHeadings = useRef(new Map<string, HTMLElement>());
-  const pickUpButton = useRef<HTMLButtonElement>(null);
   const moreButton = useRef<HTMLButtonElement>(null);
   const menu = useRef<SelectionMenuHandle>(null);
   // The poem whose verses the selection menu acts on (the front of a held sheet).
@@ -275,9 +274,12 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
     before.current = { pickedSlug, flipped };
     const focus = (el?: HTMLElement | null) => el?.focus({ preventScroll: true });
     if (was.pickedSlug !== pickedSlug) {
-      // Picked up: go to the poem. Put down: back to where it was picked up.
+      // Picked up: go to the poem. Put down: to its title on the pile, the
+      // link that picks it up again.
       if (pickedSlug) focus((flipped ? backHeadings : headings).current.get(pickedSlug));
-      else focus(pickUpButton.current);
+      else if (was.pickedSlug) {
+        focus(headings.current.get(was.pickedSlug)?.querySelector("a"));
+      }
     } else if (was.flipped !== flipped && pickedSlug) {
       focus((flipped ? backHeadings : headings).current.get(pickedSlug));
     }
@@ -660,11 +662,6 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
                 </p>
                 <DeskButton onPress={next} disabled={top === total - 1} shortcut={keys.next}>
                   {t.nextPoem}
-                </DeskButton>
-              </div>
-              <div className="comandos-grupo" key="pilha-pegar">
-                <DeskButton primary ref={pickUpButton} onPress={() => pickUp(top)}>
-                  {t.pickUp}
                 </DeskButton>
               </div>
             </>

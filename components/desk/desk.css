@@ -19,10 +19,15 @@
   );
   --folha-h: calc(var(--folha-w) * 1.42);
   --s-pilha: 0.8;
-  /* The engine replaces --topo with the title's measured height. */
-  --pilha-y: calc(
-    var(--topo-medido, var(--topo)) +
-      (100dvh - var(--topo-medido, var(--topo)) - var(--barra) - var(--sob-pilha)) / 2
+  /* The engine replaces --topo with the title's measured height. The pile
+     sits just under the title, not in the middle of the space left, so the
+     two read together. Matches the engine's pileY. */
+  --pilha-y: min(
+    calc(
+      var(--topo-medido, var(--topo)) +
+        (100dvh - var(--topo-medido, var(--topo)) - var(--barra) - var(--sob-pilha)) / 2
+    ),
+    calc(var(--topo-medido, var(--topo)) + var(--folha-h) * var(--s-pilha) / 2 + 6px)
   );
   --pegada-y: calc((100dvh - var(--barra)) / 2 + 4px);
 
@@ -76,15 +81,6 @@
        pile's corner, above the buttons, overlapping the strip kept here.
        Plain px because the engine parses this value. */
     --sob-pilha: 44px;
-    /* The pile sits just under the label, not in the middle of the space
-       left, so the two read together. Matches the engine's pileY. */
-    --pilha-y: min(
-      calc(
-        var(--topo-medido, var(--topo)) +
-          (100dvh - var(--topo-medido, var(--topo)) - var(--barra) - var(--sob-pilha)) / 2
-      ),
-      calc(var(--topo-medido, var(--topo)) + var(--folha-h) * var(--s-pilha) / 2 + 6px)
-    );
   }
 }
 
@@ -129,15 +125,25 @@
   transition: opacity 0.4s ease;
 }
 
+/* The mark and the word make one lockup, centred together. */
 .mesa-topo h1 {
   position: relative;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  /* With the drawing's own empty edge, about a third of an em of air. */
+  gap: 0.22em;
   margin: 0;
-  /* Letter-spacing adds a gap after the last letter; this re-centres it. */
-  padding-left: 0.24em;
   font-size: 1.35rem;
   font-weight: 400;
-  letter-spacing: 0.24em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
+}
+
+/* Letter-spacing adds a gap after the last letter; this takes it back, so
+   the word ends where its last letter does. */
+.titulo {
+  margin-right: -0.16em;
 }
 
 .mesa-topo p {
@@ -149,8 +155,10 @@
 }
 
 /*
- * The mark hangs to the left of the word, so the word itself stays centred
- * over the tagline and the pile.
+ * The mark stands to the left of the word. Its bottom edge starts on the
+ * word's baseline (align-items: baseline above) and drops by --desce, so the
+ * trunk sits on the line and the sheets rising from it are centred on the
+ * capitals rather than towering over them.
  *
  * It plays once, on first paint: the trunk draws itself (0–0.7s), fills,
  * throws its lid back (0.7s), the sheets rise out of it one after another
@@ -158,12 +166,15 @@
  * Each rule below holds the final pose; the keyframes only say where from.
  */
 .marca {
-  position: absolute;
-  right: 100%;
-  /* Sits on the word's baseline, like one more letter. */
-  bottom: 0.19em;
-  height: 1.45em;
-  margin-right: 0.04em;
+  --desce: 0.12em;
+  position: relative;
+  top: var(--desce);
+  flex: none;
+  height: 1.3em;
+  /* The drawing leaves 4 of its 40 units empty at each side: the left one
+     is taken back so the ink, not the box, is what gets centred. The top
+     margin keeps the mark from making the line any taller than the word. */
+  margin: -0.6em 0 0 -0.137em;
   aspect-ratio: 40 / 38;
   overflow: visible;
   filter: drop-shadow(0 1px 2px rgb(20 10 4 / 0.55));
@@ -334,11 +345,15 @@
   .mesa {
     --topo: 94px;
   }
+  .mesa-topo h1 {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.1em;
+  }
   .marca {
-    position: static;
-    display: block;
+    top: 0;
     height: 1.5em;
-    margin: 0 auto 0.1em;
+    margin: 0;
   }
 }
 
@@ -1257,9 +1272,13 @@
     visibility 0s linear 0.4s;
 }
 
-/* On phones it sits beside "Ler de perto": "built by" over the signature,
-   so it fits beside the button on the narrowest screens. */
+/* On phones it takes the bottom row, "built by" over the signature, and the
+   pile's buttons sit on the row above it. (Held up, the sheet's buttons
+   take both rows; the signature has stepped back by then.) */
 @media (max-width: 639px) {
+  .mesa:not([data-pegada]) .comandos {
+    padding-bottom: calc(max(20px, env(safe-area-inset-bottom)) + 48px);
+  }
   .assinatura {
     right: max(10px, env(safe-area-inset-right));
     flex-direction: column;
