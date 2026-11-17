@@ -20,14 +20,19 @@
   --folha-h: calc(var(--folha-w) * 1.42);
   --s-pilha: 0.8;
   /* The engine replaces --topo with the title's measured height. The pile
-     sits just under the title, not in the middle of the space left, so the
-     two read together. Matches the engine's pileY. */
-  --pilha-y: min(
-    calc(
-      var(--topo-medido, var(--topo)) +
-        (100dvh - var(--topo-medido, var(--topo)) - var(--barra) - var(--sob-pilha)) / 2
-    ),
-    calc(var(--topo-medido, var(--topo)) + var(--folha-h) * var(--s-pilha) / 2 + 6px)
+     sits just under the title, so the two read together, and the room to
+     spare is shared above and below them: --desce brings the title down by
+     half of it. Matches the engine's pileY. */
+  --desce: max(
+    0px,
+    (
+        100dvh - var(--topo-medido, var(--topo)) - var(--barra) - var(--sob-pilha) - 6px -
+          var(--folha-h) * var(--s-pilha)
+      ) /
+      2
+  );
+  --pilha-y: calc(
+    var(--topo-medido, var(--topo)) + var(--desce) + 6px + var(--folha-h) * var(--s-pilha) / 2
   );
   --pegada-y: calc((100dvh - var(--barra)) / 2 + 4px);
 
@@ -81,6 +86,9 @@
        pile's corner, above the buttons, overlapping the strip kept here.
        Plain px because the engine parses this value. */
     --sob-pilha: 44px;
+    /* On phones the label stays under the corner switches and the room to
+       spare goes below the pile, by the buttons. */
+    --desce: 0px;
   }
 }
 
@@ -156,7 +164,7 @@
 
 /*
  * The mark stands to the left of the word. Its bottom edge starts on the
- * word's baseline (align-items: baseline above) and drops by --desce, so the
+ * word's baseline (align-items: baseline above) and drops a little, so the
  * trunk sits on the line and the sheets rising from it are centred on the
  * capitals rather than towering over them.
  *
@@ -166,9 +174,9 @@
  * Each rule below holds the final pose; the keyframes only say where from.
  */
 .marca {
-  --desce: 0.12em;
+  --marca-desce: 0.12em;
   position: relative;
-  top: var(--desce);
+  top: var(--marca-desce);
   flex: none;
   height: 1.3em;
   /* The drawing leaves 4 of its 40 units empty at each side: the left one
@@ -379,6 +387,9 @@
     outline: 1px solid rgb(42 26 14 / 0.3);
     outline-offset: -5px;
     transform: rotate(-1.2deg);
+    /* Down with the pile (--desce). A translate, so the engine's measure of
+       the header (offsetTop) leaves it out. */
+    translate: 0 var(--desce);
     animation: marca-surge 600ms ease both;
   }
   .etiqueta h1 {
@@ -422,6 +433,8 @@
   }
   .mesa-topo h1 {
     font-size: 1.45rem;
+    /* Down with the pile (see .etiqueta). */
+    translate: 0 var(--desce);
   }
   .mesa-topo .etiqueta p {
     position: fixed;
