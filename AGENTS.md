@@ -33,6 +33,7 @@ Where things live:
 | `components/mdx.tsx` | Components available inside poems |
 | `lib/og.ts` | Link previews: `og:video` + `og:image` per page and language |
 | `scripts/og-video.mjs` | Records those previews from the real desk (`pnpm og`, against `pnpm start --port 3211`); rerun after adding a poem or changing the desk's look |
+| `lib/llms.ts`, `app/llms.txt/`, `app/llms-full.txt/` | `/llms.txt` (site, how it works, every poem's links) and `/llms-full.txt` (plus the texts) for AI agents, built from the poems |
 
 One WebGL canvas draws the desk, every sheet and the shadows. The engine writes
 the same matrix to each HTML sheet and to its paper quad. The picked-up poem
