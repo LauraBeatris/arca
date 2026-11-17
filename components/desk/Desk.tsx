@@ -321,28 +321,28 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
       <canvas className="mesa-papel" ref={canvasRef} aria-hidden="true" />
 
       <header className="mesa-topo">
-        <h1>
-          <Marca />
-          <span className="sr-only">{t.siteTitle}</span>
-          <span className="titulo" aria-hidden="true">
-            {Array.from(t.siteTitle).map((letter, i) => (
-              <span
-                key={i}
-                className="letra"
-                style={{ "--i": i } as CSSProperties}
-              >
-                {letter}
-              </span>
-            ))}
-          </span>
-        </h1>
-        {/* On wide screens, a note left on the desk beside the pile. */}
-        <div className="nota">
+        {/* A small cream label on the desk, like a bookplate. On wide screens
+            only the title stays at the top and the tagline becomes a note
+            beside the pile (desk.css). */}
+        <div className="etiqueta">
+          <h1>
+            <Marca />
+            <span className="sr-only">{t.siteTitle}</span>
+            <span className="titulo" aria-hidden="true">
+              {Array.from(t.siteTitle).map((letter, i) => (
+                <span
+                  key={i}
+                  className="letra"
+                  style={{ "--i": i } as CSSProperties}
+                >
+                  {letter}
+                </span>
+              ))}
+            </span>
+          </h1>
           <p>{t.tagline}</p>
-          {t.readingHint && (
-            <p className="mesa-aviso-lingua">{t.readingHint}</p>
-          )}
         </div>
+        {t.readingHint && <p className="mesa-aviso-lingua">{t.readingHint}</p>}
       </header>
 
       <main>
