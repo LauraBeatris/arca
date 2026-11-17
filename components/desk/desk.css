@@ -504,6 +504,28 @@
   user-select: text;
 }
 
+/* Its bare margins are something you take hold of to leaf it (see
+   isBarePaper in engine.ts); the words keep the text cursor. */
+@media (hover: hover) and (pointer: fine) {
+  .poema[data-pegado] .folha-conteudo,
+  .poema[data-pegado] .verso-conteudo {
+    cursor: grab;
+  }
+
+  .poema[data-pegado] :is(
+      .verso,
+      .cabecalho h2,
+      .numeral,
+      .rodape p,
+      .verso-conteudo h3,
+      .verso-conteudo h4,
+      .verso-conteudo p,
+      .palavras
+    ) {
+    cursor: text;
+  }
+}
+
 /* Ink stops at the paper's edge. */
 .folha-conteudo {
   overflow: clip;
@@ -863,27 +885,64 @@
   font-size: calc(var(--folha-w) / 27);
 }
 
+/* The back reads like an index card: the book above, the title set large
+   in its own case, the date under it, a hairline, then the sections. */
+.verso-cabecalho {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 1.1em;
+  border-bottom: 1px solid rgb(29 70 166 / 0.22);
+}
+
+.verso-livro {
+  order: -1;
+  margin: 0 0 0.55em;
+  font-size: 0.84em;
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.14em;
+  opacity: 0.72;
+}
+
+.verso-livro cite {
+  font-style: normal;
+}
+
 .verso-folha h3 {
   margin: 0;
-  font-size: 1em;
+  font-size: 1.62em;
   font-weight: 400;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  line-height: 1.12;
+  letter-spacing: -0.005em;
+  text-wrap: balance;
   outline: none;
 }
 
 .verso-data {
-  margin: 0.5em 0 0;
-  font-size: 0.86em;
+  margin: 0.55em 0 0;
+  font-size: 0.84em;
+  opacity: 0.78;
 }
 
+/* Section labels: small capitals, with a ruled line running on to the
+   edge, as on a printed card. */
 .verso-folha h4 {
-  margin: 2.2em 0 0.7em;
-  font-size: 0.74em;
+  display: flex;
+  align-items: center;
+  gap: 0.7em;
+  margin: 1.9em 0 0.9em;
+  font-size: 0.9em;
   font-weight: 400;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  opacity: 0.75;
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.15em;
+  opacity: 0.85;
+}
+
+.verso-folha h4::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.28;
 }
 
 .palavras {

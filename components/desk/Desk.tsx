@@ -186,6 +186,25 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
     play("flip");
   }, [pickedSlug, page, flipped, play, lang]);
 
+  // Leafing a sheet without the buttons (a swipe, a trackpad, a drag on its
+  // margin, the arrow keys) goes page by page and then over to the back;
+  // leafing back comes over to the front again and back through the pages.
+  const leaf = useCallback(
+    (delta: 1 | -1) => {
+      if (!pickedSlug) return;
+      if (delta > 0) {
+        if (flipped) return;
+        if (page < sheetCount - 1) turn(1);
+        else flip();
+      } else if (flipped) {
+        flip();
+      } else {
+        turn(-1);
+      }
+    },
+    [pickedSlug, flipped, page, sheetCount, turn, flip],
+  );
+
   const toggleCandle = useCallback(() => {
     const lit = !prefs.get().candle;
     prefs.set({ candle: lit });
@@ -208,9 +227,9 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
     () => ({ top, picked, page, flipped }),
     [top, picked, page, flipped],
   );
-  const live = useRef({ view, next, previous, pickUp, putDown, turn, top, picked });
+  const live = useRef({ view, next, previous, pickUp, putDown, leaf, top, picked });
   useEffect(() => {
-    live.current = { view, next, previous, pickUp, putDown, turn, top, picked };
+    live.current = { view, next, previous, pickUp, putDown, leaf, top, picked };
   });
 
   useEffect(() => {
@@ -230,7 +249,7 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
         onDismiss: () => live.current.next(),
         onPickUp: () => live.current.pickUp(live.current.top),
         onPutDown: () => live.current.putDown(),
-        onPage: (delta) => live.current.turn(delta),
+        onPage: (delta) => live.current.leaf(delta),
         onPaper: setPaper,
         onTilt: setTilt,
       },
@@ -386,10 +405,10 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
       const now = live.current;
       const is = (entry: DeskKey) => entry.keys.includes(event.key);
       if (is(keys.next)) {
-        if (now.picked) now.turn(1);
+        if (now.picked) now.leaf(1);
         else now.next();
       } else if (is(keys.previous)) {
-        if (now.picked) now.turn(-1);
+        if (now.picked) now.leaf(-1);
         else now.previous();
       } else if (is(keys.putDown)) {
         if (!now.picked) return;
@@ -546,23 +565,36 @@ export function Desk({ poems }: { poems: DeskPoem[] }) {
                   inert={!(isPicked && flipped)}
                 >
                   <div className="verso-conteudo">
-                    <h3
-                      id={`verso-${poem.slug}`}
-                      tabIndex={-1}
-                      ref={(el) => {
-                        if (el) backHeadings.current.set(poem.slug, el);
-                        else backHeadings.current.delete(poem.slug);
-                      }}
-                    >
-                      <span className="sr-only" lang={t.lang}>
-                        {t.backPrefix}{" "}
-                      </span>
-                      {poem.title}
-                    </h3>
-                    <p className="verso-data" lang={t.lang}>
-                      {t.markedOn}{" "}
-                      <time dateTime={poem.markedAt}>{formatDate(poem.markedAt, t)}</time>
-                    </p>
+                    <header className="verso-cabecalho">
+                      <h3
+                        id={`verso-${poem.slug}`}
+                        tabIndex={-1}
+                        ref={(el) => {
+                          if (el) backHeadings.current.set(poem.slug, el);
+                          else backHeadings.current.delete(poem.slug);
+                        }}
+                      >
+                        <span className="sr-only" lang={t.lang}>
+                          {t.backPrefix}{" "}
+                        </span>
+                        {poem.title}
+                      </h3>
+                      {/* Shown above the title; read after it. */}
+                      <p className="verso-livro" lang={t.lang}>
+                        <cite lang="pt">{t.bookName[poem.book]}</cite>
+                        {poem.numeral && (
+                          <>
+                            <span aria-hidden="true"> · </span>
+                            <span className="sr-only">, </span>
+                            <span lang="pt">{poem.numeral}</span>
+                          </>
+                        )}
+                      </p>
+                      <p className="verso-data" lang={t.lang}>
+                        {t.markedOn}{" "}
+                        <time dateTime={poem.markedAt}>{formatDate(poem.markedAt, t)}</time>
+                      </p>
+                    </header>
                     {poem.facsimile && (
                       <FacsimileFigure
                         facsimile={poem.facsimile}
