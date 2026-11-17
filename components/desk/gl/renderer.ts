@@ -52,6 +52,9 @@ export type Frame = {
   candle: [number, number, number];
   candleOn: number;
   deskDim: number;
+  /** The book on top's ambience: lamp colour and desk tone, RGB multipliers. */
+  lampTint: [number, number, number];
+  deskTint: [number, number, number];
   quads: SheetQuad[];
 };
 
@@ -64,7 +67,7 @@ type Program = {
 
 /** One paper tile covers this many local px of a sheet. */
 const PAPER_TILE_PX = 640;
-/** One wood tile covers this many css px of desk. */
+/** One wood tile covers this many css px of desk (TILE_PX in the wood shader). */
 const WOOD_TILE_PX = 1500;
 
 const frac = (n: number) => n - Math.floor(n);
@@ -284,6 +287,8 @@ export class PaperRenderer {
     gl.uniform1f(du.uDpr, this.dpr);
     gl.uniform1f(du.uTilePx, WOOD_TILE_PX);
     gl.uniform1f(du.uDim, frame.deskDim);
+    gl.uniform3fv(du.uDeskTint, frame.deskTint);
+    gl.uniform3fv(du.uLampTint, frame.lampTint);
     gl.uniform3fv(du.uLight, frame.light);
     gl.uniform1f(du.uLampOn, frame.lampOn);
     gl.uniform1f(du.uFalloff, falloff);
@@ -402,6 +407,7 @@ export class PaperRenderer {
     gl.uniform3fv(u.uCandle, frame.candle);
     gl.uniform1f(u.uCandleOn, frame.candleOn);
     gl.uniform1f(u.uCandleK, quad.candle);
+    gl.uniform3fv(u.uLampTint, frame.lampTint);
     this.bind(maps, u);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   }

@@ -197,7 +197,7 @@ function clientIp(request: Request) {
 
 type Outcome =
   | { translation: string }
-  | { error: "unavailable" | "failed" | "busy"; status: number };
+  | { error: "unavailable" | "failed" | "busy"; status: number; retryAfterMs?: number };
 
 const cache = new Map<string, string>();
 const pending = new Map<string, Promise<Outcome>>();
@@ -274,10 +274,27 @@ async function translate(
   }
 }
 
+/**
+ * The site-wide check, then the model call: one promise, so a request that
+ * joins it while the Firewall is still answering waits for the same call.
+ */
+async function admitAndTranslate(
+  request: Request,
+  poem: Poem,
+  selection: string,
+  apiKey: string,
+): Promise<Outcome> {
+  if (await siteWideLimitReached(request)) {
+    return { error: "busy", status: 429, retryAfterMs: 60_000 };
+  }
+  return translate(poem, selection, apiKey);
+}
+
 function reply(outcome: Outcome) {
   if ("translation" in outcome) {
     return Response.json({ translation: outcome.translation });
   }
+  if (outcome.retryAfterMs !== undefined) return busy(outcome.retryAfterMs);
   return Response.json({ error: outcome.error }, { status: outcome.status });
 }
 
@@ -322,6 +339,15 @@ export async function POST(request: Request) {
     return Response.json({ error: "unavailable" }, { status: 503 });
   }
 
+  // From here to `pending.set` nothing awaits, so the in-flight check and the
+  // slot it reserves happen together, and an identical request can't slip in
+  // between. Look again: the same selection may have finished or started
+  // while the credential was being read.
+  const cached = cache.get(key);
+  if (cached) return Response.json({ translation: cached });
+  const started = pending.get(key);
+  if (started) return reply(await started);
+
   const now = Date.now();
   const visitor = clientWindow(clientIp(request), now);
   if (!visitor) return busy(60_000);
@@ -332,10 +358,11 @@ export async function POST(request: Request) {
   if (!take(instance, PER_INSTANCE.limit, PER_INSTANCE.windowMs, now)) {
     return busy(instance.resetAt - now);
   }
-  if (await siteWideLimitReached(request)) return busy(60_000);
 
+  // The slot is held through the site-wide check and released on every
+  // outcome: busy, failure or a translation.
   inFlight += 1;
-  const call = translate(poem, selection, apiKey).finally(() => {
+  const call = admitAndTranslate(request, poem, selection, apiKey).finally(() => {
     inFlight -= 1;
     pending.delete(key);
   });

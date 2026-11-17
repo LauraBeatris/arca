@@ -1159,6 +1159,51 @@
   transform: scale(0.97);
 }
 
+/*
+ * The key a button answers to ("esc", "m", the arrows), set small beside its
+ * label, as quiet as the page number. Shown only where a keyboard is likely:
+ * a fine pointer that can hover, or once any key has been pressed
+ * (data-teclado). Elsewhere the arrows stay plain arrows and the rest hide.
+ */
+.tecla {
+  display: inline-block;
+  min-width: 1.75em;
+  padding: 0.12em 0.4em 0.14em;
+  border: 1px solid color-mix(in srgb, currentColor 35%, transparent);
+  border-radius: 4px;
+  font: inherit;
+  font-size: 0.68rem;
+  line-height: 1.2;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+@media not all and (hover: hover) and (pointer: fine) {
+  .mesa:not([data-teclado]) .tecla {
+    display: none;
+  }
+  .mesa:not([data-teclado]) .tecla[data-seta] {
+    display: inline;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    font-size: inherit;
+    line-height: inherit;
+    letter-spacing: inherit;
+    opacity: 1;
+  }
+}
+
+/* A phone-width bar has no room for "m" and "esc" beside their labels; the
+   buttons' aria-keyshortcuts still name them. */
+@media (max-width: 439px) {
+  .tecla:not([data-seta]) {
+    display: none;
+  }
+}
+
 .posicao {
   min-width: 3em;
   margin: 0;
@@ -1367,6 +1412,10 @@
   }
   .menu-atalho {
     display: none;
+  }
+  /* Unless a keyboard is attached after all (see .tecla). */
+  .mesa[data-teclado] .menu-atalho {
+    display: inline;
   }
 }
 

@@ -1,4 +1,4 @@
-import type { PaperId } from "@/lib/papers";
+import { BOOK_AMBIENCE, type Book, type PaperId } from "@/lib/papers";
 import { FAN, hash01, jitterFor, type Jitter } from "@/lib/seed";
 import { PaperRenderer, type SheetQuad } from "./gl/renderer";
 import {
@@ -28,7 +28,7 @@ import {
  * (see `occlude`).
  */
 
-export type EnginePoem = { slug: string; paper: PaperId; sheets: number };
+export type EnginePoem = { slug: string; book: Book; paper: PaperId; sheets: number };
 
 export type View = {
   /** Index of the poem on top of the pile; poems before it have been set aside. */
@@ -66,6 +66,13 @@ const HEADER_GAP = 18;
 const CANDLE_HEIGHT = 46;
 /** Where the clip grips the sheets, as fractions of the sheet size. */
 const CLIP_X = 0.13;
+/** Seconds the room takes to settle into another book's light. */
+const TONE_EASE = 1;
+
+type Tone = number[];
+/** A book's ambience as one list: lamp RGB, then desk RGB. */
+const toneOf = (book: Book | undefined): Tone =>
+  book ? [...BOOK_AMBIENCE[book].lamp, ...BOOK_AMBIENCE[book].desk] : [1, 1, 1, 1, 1, 1];
 
 class Spring {
   v = 0;
@@ -195,6 +202,11 @@ export class DeskEngine {
   private candleGlow = new Spring(1, 60, 14, 0.002);
   private lastDraw = 0;
 
+  /** The book on top tints the lamp and the desk; eased from one to the next. */
+  private toneFrom: Tone;
+  private toneTo: Tone;
+  private toneT = 1;
+
   constructor(
     private root: HTMLElement,
     private canvas: HTMLCanvasElement,
@@ -239,6 +251,7 @@ export class DeskEngine {
       };
     });
 
+    this.toneTo = this.toneFrom = toneOf(poems[view.top]?.book);
     this.candleEl = root.querySelector<HTMLElement>(".vela");
     this.measure();
     this.lampX.snap(this.restLamp()[0]);
@@ -382,6 +395,25 @@ export class DeskEngine {
         fold.target = picked && j < view.page ? 1 : 0;
       });
     });
+    this.retone();
+  }
+
+  /** The ambience right now, part way between two books while easing. */
+  private tone(): Tone {
+    const e = smooth(0, 1, this.toneT);
+    return this.toneFrom.map((v, i) => v + (this.toneTo[i] - v) * e);
+  }
+
+  /**
+   * Starts easing towards the ambience of the book on top. With reduced
+   * motion it switches at once (while the pile is faded out).
+   */
+  private retone() {
+    const to = toneOf(this.poems[this.view.top]?.poem.book);
+    if (to.every((v, i) => v === this.toneTo[i])) return;
+    this.toneFrom = this.tone();
+    this.toneTo = to;
+    this.toneT = this.reduced ? 1 : 0;
   }
 
   private springsOf(s: PoemState): Spring[] {
@@ -423,6 +455,11 @@ export class DeskEngine {
 
     if (this.renderer && this.lampOn < 1) {
       this.lampOn = this.reduced ? 1 : Math.min(1, this.lampOn + dt / 1.1);
+      active = true;
+    }
+
+    if (this.toneT < 1) {
+      this.toneT = Math.min(1, this.toneT + dt / TONE_EASE);
       active = true;
     }
 
@@ -706,6 +743,7 @@ export class DeskEngine {
       });
     }
     const deskDim = this.poems.reduce((min, s) => Math.min(min, s.dim.x), 1);
+    const tone = this.tone();
     this.renderer.render({
       width: this.vw,
       height: this.vh,
@@ -714,6 +752,8 @@ export class DeskEngine {
       candle: [this.candleX, this.candleY, CANDLE_HEIGHT],
       candleOn: flame * this.lampOn,
       deskDim: 0.55 + 0.45 * smooth(PILE_DIM, 1, deskDim),
+      lampTint: [tone[0], tone[1], tone[2]],
+      deskTint: [tone[3], tone[4], tone[5]],
       quads,
     });
   }
@@ -766,6 +806,7 @@ export class DeskEngine {
       this.lampX.snap(this.restLamp()[0]);
       this.lampY.snap(this.restLamp()[1]);
       this.snapAll();
+      this.toneT = 1;
     }
     this.invalidate();
   };

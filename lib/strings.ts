@@ -42,6 +42,12 @@ const pt = {
   backPrefix: "Verso da folha:",
   wordsHeading: "Palavras que aprendi",
   reflectionHeading: "Reflexão",
+  // A scan of Pessoa's own page, set into the back like a figure in a book.
+  facsimileFigure: (n: number) => `fig. ${n}`,
+  facsimileAlt: (title: string) => `Página do espólio de Fernando Pessoa: ${title}`,
+  facsimileOpen: (title: string) => `Ampliar a página original de ${title}`,
+  facsimileSource: "Fonte",
+  facsimileClose: "Fechar",
   bookName: {
     mensagem: "Mensagem",
     cancioneiro: "Cancioneiro",
@@ -87,6 +93,13 @@ const pt = {
     listen: "o",
     dictionary: "d",
     share: "p",
+  },
+  // Keys that move around the desk. `keys` are the KeyboardEvent keys that
+  // do it (the desk listens for these); `label` is the hint on its button.
+  keys: {
+    previous: { keys: ["ArrowLeft", "ArrowUp"], label: "←" },
+    next: { keys: ["ArrowRight", "ArrowDown"], label: "→" },
+    putDown: { keys: ["Escape"], label: "esc" },
   },
 
   notFoundTitle: "Esta folha não está na arca.",
@@ -167,6 +180,11 @@ const en: Strings = {
   backPrefix: "Back of the sheet:",
   wordsHeading: "Words I learned",
   reflectionHeading: "Reflection",
+  facsimileFigure: (n) => `fig. ${n}`,
+  facsimileAlt: (title) => `A page from Fernando Pessoa’s papers: ${title}`,
+  facsimileOpen: (title) => `Enlarge the original page of ${title}`,
+  facsimileSource: "Source",
+  facsimileClose: "Close",
   // Book titles stay as Pessoa named them.
   bookName: {
     mensagem: "Mensagem",
@@ -211,6 +229,11 @@ const en: Strings = {
     listen: "l",
     dictionary: "d",
     share: "s",
+  },
+  keys: {
+    previous: { keys: ["ArrowLeft", "ArrowUp"], label: "←" },
+    next: { keys: ["ArrowRight", "ArrowDown"], label: "→" },
+    putDown: { keys: ["Escape"], label: "esc" },
   },
 
   notFoundTitle: "This sheet isn’t in the Arca.",

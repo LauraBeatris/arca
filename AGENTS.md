@@ -13,7 +13,10 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 Poems are MDX files in `content/poems/` (see `README.md` and the comment at the
 top of `lib/poems.tsx` for the frontmatter). Optional fields the README leaves
 out: `numeral` (the poem's number in its book), `paper` (`carta` | `maquina`,
-overrides the book's paper), `source` (URL the text came from). Inside a poem,
+overrides the book's paper), `source` (URL the text came from), `facsimile`
+(`{ src, source, caption? }`: a scan of Pessoa's page shown as a numbered figure
+on the back; `src` is a file in `public/` or a host listed in
+`lib/facsimiles.ts`, `source` is the scan's credit URL). Inside a poem,
 `<Mark note="…">word</Mark>` marks a word; in v1 it renders as plain text.
 
 Where things live:
@@ -33,6 +36,7 @@ Where things live:
 | `components/mdx.tsx` | Components available inside poems |
 | `lib/og.ts` | Link previews: `og:video` + `og:image` per page and language |
 | `scripts/og-video.mjs` | Records those previews from the real desk (`pnpm og`, against `pnpm start --port 3211`); rerun after adding a poem or changing the desk's look |
+| `lib/llms.ts`, `app/llms.txt/`, `app/llms-full.txt/` | `/llms.txt` (site, how it works, every poem's links) and `/llms-full.txt` (plus the texts) for AI agents, built from the poems |
 
 One WebGL canvas draws the desk, every sheet and the shadows. The engine writes
 the same matrix to each HTML sheet and to its paper quad. The reading position
