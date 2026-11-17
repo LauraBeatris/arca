@@ -82,7 +82,8 @@ Rules that hold for every change:
   a marked draft for her to review (`RASCUNHO`). Notes stay real text, out
   of the verse.
 - Take poem text from a reliable source (Arquivo Pessoa) and check it. Never
-  write a poem from memory, and never invent Laura's words or reflections:
-  use clearly marked placeholder text.
+  write a poem from memory, and never invent Laura's words or reflections
+  unless she asks; anything written for her carries a `RASCUNHO` comment in
+  the frontmatter until she has reviewed it.
 - Paper stocks are materials (`lib/papers.ts`) so scanned albedo/relief maps can
   replace the procedural ones without touching the lamp or layout code.
