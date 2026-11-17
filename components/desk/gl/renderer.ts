@@ -64,7 +64,7 @@ type Program = {
 
 /** One paper tile covers this many local px of a sheet. */
 const PAPER_TILE_PX = 640;
-/** One wood tile covers this many css px of desk. */
+/** One wood tile covers this many css px of desk (TILE_PX in the wood shader). */
 const WOOD_TILE_PX = 1500;
 
 const frac = (n: number) => n - Math.floor(n);

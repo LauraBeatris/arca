@@ -168,7 +168,13 @@ void main() {
 }
 `;
 
-/** Warm mid-toned wood, grain running left to right. Kept low in contrast. */
+/**
+ * An oak top made of planks running left to right, each sawn from a different
+ * log: its own shade, its own grain, thin seams between boards and one butt
+ * joint per board (which also hides where the tile repeats). The grain lives
+ * mostly in the colour; the relief is kept shallow so the lamp shows the
+ * seams and pores rather than ridges.
+ */
 export const BAKE_WOOD_FRAG = /* glsl */ `#version 300 es
 precision highp float;
 in vec2 vUv;
@@ -177,33 +183,73 @@ layout(location = 0) out vec4 oAlbedo;
 layout(location = 1) out vec4 oRelief;
 ${NOISE}
 
-// x: ring bands, y: pores
-vec2 wood(vec2 uv) {
-  float warp = fbm(uv * vec2(2.0, 5.0), vec2(2.0, 5.0), 3.0);
-  float fine = fbm(uv * vec2(6.0, 60.0), vec2(6.0, 60.0), 11.0);
-  float rings = 0.5 + 0.5 * sin((uv.y * 11.0 + warp * 2.6 + fine * 0.35) * 6.28318);
-  rings = mix(rings, fine, 0.45);
-  float pores = vnoise(uv * vec2(28.0, 620.0), vec2(28.0, 620.0), 17.0);
-  pores = smoothstep(0.62, 0.9, pores) * (0.4 + 0.6 * vnoise(uv * vec2(3.0, 40.0), vec2(3.0, 40.0), 23.0));
-  return vec2(rings, pores);
+const float BOARDS = 5.0;     // boards per tile
+const float RINGS = 22.0;     // growth rings across one board
+const float TILE_PX = 1500.0; // see WOOD_TILE_PX in renderer.ts
+
+// x: latewood (0..1), y: pores (0..1), z: fibre streaks (0..1),
+// w: seam (1 on the joint between boards or at a board's butt end).
+vec4 planks(vec2 uv) {
+  float row = floor(uv.y * BOARDS);
+  float by = fract(uv.y * BOARDS);
+  float id = mod(row, BOARDS);
+  float r1 = hash12(vec2(id, 3.0));
+  float r2 = hash12(vec2(id, 9.0));
+  // Lines stay nearly parallel and drift slowly along the board.
+  float wander = 1.1 * vnoise(vec2(uv.x * 2.0, id * 5.0), vec2(2.0, 1000.0), 5.0)
+               + 0.3 * vnoise(vec2(uv.x * 6.0, id * 5.0), vec2(6.0, 1000.0), 8.0);
+  float t = by * RINGS * (0.8 + 0.4 * r1) + wander + r2 * 10.0;
+  // Rings of uneven width (the tree grew faster some years).
+  t += 0.9 * vnoise(vec2(t * 0.45, id * 3.0), vec2(1000.0), 41.0);
+  float f = fract(t);
+  float ring = floor(t);
+  // Earlywood rises slowly into a thin dark latewood line, then breaks.
+  float late = smoothstep(0.72, 0.95, f) * (1.0 - smoothstep(0.95, 1.0, f));
+  late *= 0.3 + 0.7 * hash12(vec2(ring, id + 2.0));
+  late *= 0.7 + 0.3 * vnoise(vec2(uv.x * 30.0, ring), vec2(30.0, 1000.0), 29.0);
+  // Fine long fibres, the "silk" that follows the grain.
+  float fib = fbm(vec2(uv.x * 3.0, uv.y * 300.0 + wander * 8.0), vec2(3.0, 300.0), 61.0 + id);
+  // Pores: tiny needles, mostly in the earlywood.
+  float p = vnoise(vec2(uv.x * 260.0, uv.y * 640.0), vec2(260.0, 640.0), 17.0 + id);
+  p = smoothstep(0.9, 0.995, p) * 0.7 * (1.0 - 0.6 * late);
+  // Seams, about 1.6 px wide.
+  float px = 1.0 / TILE_PX;
+  float seamY = 1.0 - smoothstep(0.0, 1.6 * px * BOARDS, min(by, 1.0 - by));
+  float jx = fract(uv.x - hash12(vec2(id, 21.0)));
+  float seamX = 1.0 - smoothstep(0.0, 1.6 * px, min(jx, 1.0 - jx));
+  return vec4(late, p, fib, max(seamY, seamX));
+}
+
+// Each board its own shade, with soft streaks of colour running along it.
+float boardTone(vec2 uv) {
+  float id = mod(floor(uv.y * BOARDS), BOARDS);
+  float streak = fbm(vec2(uv.x * 1.5, uv.y * BOARDS * 5.0), vec2(1.5, BOARDS * 5.0), 47.0);
+  return clamp(0.6 * hash12(vec2(id, 13.0)) + 0.8 * (streak - 0.5) + 0.2, 0.0, 1.0);
+}
+
+vec3 albedoAt(vec2 uv) {
+  vec4 w = planks(uv);
+  float tone = boardTone(uv);
+  vec3 early = mix(vec3(0.440, 0.320, 0.210), vec3(0.540, 0.400, 0.262), tone);
+  vec3 lateC = vec3(0.330, 0.230, 0.145);
+  vec3 alb = mix(early, lateC, 0.8 * w.x);
+  alb *= 0.88 + 0.22 * w.z;
+  alb *= 0.94 + 0.12 * fbm(uv * vec2(1.5, 4.0), vec2(1.5, 4.0), 31.0);
+  alb *= 1.0 - 0.4 * w.y;
+  alb *= 1.0 - 0.55 * w.w;
+  return alb;
 }
 float heightAt(vec2 uv) {
-  vec2 w = wood(uv);
-  return 0.5 + 0.22 * w.x - 0.4 * w.y;
+  vec4 w = planks(uv);
+  return 0.55 + 0.025 * w.x + 0.035 * w.z - 0.03 * w.y - 0.5 * w.w;
 }
 
 void main() {
   float e = uTexel;
-  vec2 w = wood(vUv);
-  vec3 dark = vec3(0.300, 0.186, 0.102);
-  vec3 mid = vec3(0.455, 0.300, 0.166);
-  vec3 alb = mix(dark, mid, smoothstep(0.1, 0.95, w.x));
-  alb *= 0.9 + 0.2 * fbm(vUv * vec2(1.0, 3.0), vec2(1.0, 3.0), 31.0);
-  alb *= 1.0 - 0.34 * w.y;
   float hx = heightAt(vUv + vec2(e, 0.0)) - heightAt(vUv - vec2(e, 0.0));
   float hy = heightAt(vUv + vec2(0.0, e)) - heightAt(vUv - vec2(0.0, e));
   vec2 slope = vec2(hx, hy) * (1.0 / (e * 2048.0)) * 2.0;
-  oAlbedo = vec4(alb, 1.0);
+  oAlbedo = vec4(albedoAt(vUv), 1.0);
   oRelief = vec4(clamp(slope * 0.5 + 0.5, 0.0, 1.0), clamp(heightAt(vUv), 0.0, 1.0), 1.0);
 }
 `;
