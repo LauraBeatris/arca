@@ -35,7 +35,14 @@
   cursor: zoom-in;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
-  transition: box-shadow 0.2s ease;
+  transition:
+    box-shadow 0.2s ease,
+    transform 160ms var(--ease-out);
+}
+
+/* Pressed, the picture gives a little before it opens. */
+.fac-abrir:active {
+  transform: scale(0.98);
 }
 
 .fac-abrir img {
@@ -192,6 +199,9 @@
   }
   .fac-abrir {
     transition: none;
+  }
+  .fac-abrir:active {
+    transform: none;
   }
 }
 

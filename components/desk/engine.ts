@@ -348,13 +348,14 @@ export class DeskEngine {
     // The candle's CSS places it from the pile's real size.
     this.root.style.setProperty("--s-pilha", String(this.pileScale));
     this.pileX = this.vw / 2;
-    this.pileY = top + (this.vh - top - bar - under) / 2;
-    // On phones the pile sits just under the label rather than in the middle
-    // of the space left: any room to spare goes below it, by the buttons.
-    // (Matched by --pilha-y in desk.css.)
-    if (this.vw < 640) {
-      this.pileY = Math.min(this.pileY, top + (this.H * this.pileScale) / 2 + 6);
-    }
+    // The pile sits just under the title, so the two read together, and any
+    // room to spare is shared above and below them: the title comes down by
+    // --desce (desk.css), which the header's measured place leaves out
+    // because it is a translate. On phones the room goes below, by the
+    // buttons. (Matched by --pilha-y in desk.css.)
+    const spare = this.vh - top - bar - under - 6 - this.H * this.pileScale;
+    const lower = this.vw < 640 ? 0 : Math.max(0, spare / 2);
+    this.pileY = top + lower + 6 + (this.H * this.pileScale) / 2;
     // Land the picked-up sheet on whole pixels so its text stays sharp.
     this.pickedY =
       Math.round(Math.max(8, (this.vh - bar - this.H) / 2 + 4)) + this.H / 2;

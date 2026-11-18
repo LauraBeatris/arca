@@ -27,7 +27,6 @@ const pt = {
 
   previousPoem: "Poema anterior",
   nextPoem: "Próximo poema",
-  pickUp: "Ler de perto",
   putDown: "Devolver à pilha",
   putDownDone: "Folha devolvida à pilha.",
   seeBack: "Ver o verso",
@@ -167,7 +166,6 @@ const en: Strings = {
 
   previousPoem: "Previous poem",
   nextPoem: "Next poem",
-  pickUp: "Read up close",
   putDown: "Back to the pile",
   putDownDone: "Sheet returned to the pile.",
   seeBack: "See the back",

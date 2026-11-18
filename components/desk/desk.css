@@ -11,7 +11,7 @@
 .mesa {
   --topo: 78px; /* space kept for the title */
   --barra: 96px; /* space kept for the buttons */
-  --sob-pilha: 0px; /* space kept under the pile (for the candle on phones) */
+  --sob-pilha: 0px; /* space kept under the pile (the candle on phones, the tagline on wide screens) */
   --folha-w: clamp(
     220px,
     min(92vw, calc((100dvh - var(--barra) - 40px) / 1.42)),
@@ -19,10 +19,20 @@
   );
   --folha-h: calc(var(--folha-w) * 1.42);
   --s-pilha: 0.8;
-  /* The engine replaces --topo with the title's measured height. */
+  /* The engine replaces --topo with the title's measured height. The pile
+     sits just under the title, so the two read together, and the room to
+     spare is shared above and below them: --desce brings the title down by
+     half of it. Matches the engine's pileY. */
+  --desce: max(
+    0px,
+    (
+        100dvh - var(--topo-medido, var(--topo)) - var(--barra) - var(--sob-pilha) - 6px -
+          var(--folha-h) * var(--s-pilha)
+      ) /
+      2
+  );
   --pilha-y: calc(
-    var(--topo-medido, var(--topo)) +
-      (100dvh - var(--topo-medido, var(--topo)) - var(--barra) - var(--sob-pilha)) / 2
+    var(--topo-medido, var(--topo)) + var(--desce) + 6px + var(--folha-h) * var(--s-pilha) / 2
   );
   --pegada-y: calc((100dvh - var(--barra)) / 2 + 4px);
 
@@ -61,8 +71,9 @@
   --escuro: rgb(140 140 140);
 }
 
-/* Narrower than this the buttons take two rows. */
-@media (max-width: 859px) {
+/* Narrower than this the buttons take two rows: a held sheet's buttons,
+   with language and sound beside them, need about 970px for one. */
+@media (max-width: 999px) {
   .mesa {
     --barra: 148px;
   }
@@ -76,15 +87,9 @@
        pile's corner, above the buttons, overlapping the strip kept here.
        Plain px because the engine parses this value. */
     --sob-pilha: 44px;
-    /* The pile sits just under the label, not in the middle of the space
-       left, so the two read together. Matches the engine's pileY. */
-    --pilha-y: min(
-      calc(
-        var(--topo-medido, var(--topo)) +
-          (100dvh - var(--topo-medido, var(--topo)) - var(--barra) - var(--sob-pilha)) / 2
-      ),
-      calc(var(--topo-medido, var(--topo)) + var(--folha-h) * var(--s-pilha) / 2 + 6px)
-    );
+    /* On phones the label stays under the corner switches and the room to
+       spare goes below the pile, by the buttons. */
+    --desce: 0px;
   }
 }
 
@@ -129,15 +134,15 @@
   transition: opacity 0.4s ease;
 }
 
+/* The title is the mark alone; the site's name is in it for screen
+   readers. Its font size is only the unit the mark is sized in. */
 .mesa-topo h1 {
   position: relative;
+  display: flex;
+  justify-content: center;
   margin: 0;
-  /* Letter-spacing adds a gap after the last letter; this re-centres it. */
-  padding-left: 0.24em;
   font-size: 1.35rem;
   font-weight: 400;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
 }
 
 .mesa-topo p {
@@ -149,21 +154,17 @@
 }
 
 /*
- * The mark hangs to the left of the word, so the word itself stays centred
- * over the tagline and the pile.
+ * The mark: the trunk alone, with no word beside it.
  *
  * It plays once, on first paint: the trunk draws itself (0–0.7s), fills,
  * throws its lid back (0.7s), the sheets rise out of it one after another
- * (0.85s) and the ribbon drops last (1.45s). The letters arrive meanwhile.
- * Each rule below holds the final pose; the keyframes only say where from.
+ * (0.85s) and the ribbon drops last (1.45s). Each rule below holds the
+ * final pose; the keyframes only say where from.
  */
 .marca {
-  position: absolute;
-  right: 100%;
-  /* Sits on the word's baseline, like one more letter. */
-  bottom: 0.19em;
-  height: 1.45em;
-  margin-right: 0.04em;
+  display: block;
+  flex: none;
+  height: 1.8em;
   aspect-ratio: 40 / 38;
   overflow: visible;
   filter: drop-shadow(0 1px 2px rgb(20 10 4 / 0.55));
@@ -262,12 +263,6 @@
   animation: marca-fita 380ms var(--ease-out) 1450ms both;
 }
 
-.letra {
-  display: inline-block;
-  animation: marca-letra 800ms var(--ease-out) both;
-  animation-delay: calc(250ms + var(--i) * 80ms);
-}
-
 @keyframes marca-traca {
   from {
     stroke-dashoffset: 1;
@@ -304,14 +299,6 @@
   }
 }
 
-@keyframes marca-letra {
-  from {
-    opacity: 0;
-    transform: translateY(0.35em);
-    filter: blur(4px);
-  }
-}
-
 /* A sheet held up to read covers the title, so the title steps back. */
 .mesa[data-pegada] .mesa-topo {
   opacity: 0;
@@ -323,22 +310,6 @@
   }
   .mesa-topo p {
     font-size: 0.78rem;
-  }
-}
-
-/*
- * The narrowest phones have no room beside the word (the corner switches sit
- * there), so the mark stands above it and the pile moves down to make room.
- */
-@media (max-width: 379px) {
-  .mesa {
-    --topo: 94px;
-  }
-  .marca {
-    position: static;
-    display: block;
-    height: 1.5em;
-    margin: 0 auto 0.1em;
   }
 }
 
@@ -364,6 +335,9 @@
     outline: 1px solid rgb(42 26 14 / 0.3);
     outline-offset: -5px;
     transform: rotate(-1.2deg);
+    /* Down with the pile (--desce). A translate, so the engine's measure of
+       the header (offsetTop) leaves it out. */
+    translate: 0 var(--desce);
     animation: marca-surge 600ms ease both;
   }
   .etiqueta h1 {
@@ -397,28 +371,34 @@
 
 /*
  * With room beside the pile, only the title stays at the top, on the wood.
- * The tagline becomes a note left on the desk to the left of the pile, set
- * a little off square like something written by hand. It grows upwards from
- * just above the pile's middle.
+ * The tagline goes under the pile, centred, set a little off square like a
+ * note left on the desk. --sob-pilha keeps a strip for it, so the title,
+ * the pile and the note are centred together and the note never reaches
+ * the buttons.
  */
 @media (min-width: 1100px) {
+  .mesa {
+    --sob-pilha: 64px;
+  }
   .etiqueta {
     display: contents;
   }
   .mesa-topo h1 {
     font-size: 1.45rem;
+    /* Down with the pile (see .etiqueta). */
+    translate: 0 var(--desce);
   }
   .mesa-topo .etiqueta p {
     position: fixed;
-    right: calc(50% + var(--folha-w) * var(--s-pilha) / 2 + 48px);
-    width: 12.5rem;
-    line-height: 1.45;
-    text-align: left;
-    transform: rotate(-2.5deg);
-    bottom: calc(100% - var(--pilha-y) + 2.2rem);
+    /* Clear of the lowest sheets, which stand out a little past the top one. */
+    top: calc(var(--pilha-y) + var(--folha-h) * var(--s-pilha) / 2 + 34px);
+    left: 50%;
+    width: max-content;
+    max-width: calc(100vw - 32px);
     font-size: 0.95rem;
+    line-height: 1.45;
     opacity: 0.8;
-    transform-origin: 100% 100%;
+    transform: translateX(-50%) rotate(-1.2deg);
   }
 }
 
@@ -1122,19 +1102,36 @@
   }
 }
 
-/* Quiet switches in the top right corner: language and sound. */
+/* Quiet switches beside the controls, after a short rule: language and
+   sound. They stay whatever the desk is showing. */
 .canto {
-  position: absolute;
-  z-index: 100;
-  top: max(6px, env(safe-area-inset-top));
   /* A row centred on one line, so a text button ("PT") and an icon button
      sit level instead of sharing a text baseline. */
   display: flex;
   align-items: center;
+  pointer-events: auto;
 }
 
-.canto-direito {
-  right: max(6px, env(safe-area-inset-right));
+.canto::before {
+  content: "";
+  width: 1px;
+  height: 18px;
+  margin-right: 10px;
+  background: rgb(239 230 210 / 0.25);
+}
+
+/* Phones have no room for them in the bar (a held sheet's buttons take
+   both rows): they stand in the top right corner, over the label. */
+@media (max-width: 639px) {
+  .canto {
+    position: fixed;
+    z-index: 100;
+    top: max(0px, env(safe-area-inset-top));
+    right: max(6px, env(safe-area-inset-right));
+  }
+  .canto::before {
+    display: none;
+  }
 }
 
 /* -------------------------------------------------------------- signature */
@@ -1162,9 +1159,18 @@
   opacity: 0.74;
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
+  /* A link you press, not words to copy: holding it never selects "built by". */
+  -webkit-user-select: none;
+  user-select: none;
   transition:
     opacity 0.4s ease,
     visibility 0s linear 0s;
+}
+
+/* A finger gets the same answer a hovering pointer does. */
+.assinatura:active {
+  opacity: 1;
+  transition-duration: 0s;
 }
 
 .assinatura:focus-visible {
@@ -1248,8 +1254,16 @@
     visibility 0s linear 0.4s;
 }
 
-/* On phones it sits beside "Ler de perto": "built by" over the signature,
-   so it fits beside the button on the narrowest screens. */
+/* Where the bar has two rows (narrower than 1000px), the signature takes the
+   bottom one and the pile's buttons sit on the row above it. (Held up, the
+   sheet's buttons take both rows; the signature has stepped back by then.) */
+@media (max-width: 999px) {
+  .mesa:not([data-pegada]) .comandos {
+    padding-bottom: calc(max(20px, env(safe-area-inset-bottom)) + 48px);
+  }
+}
+
+/* On phones, "built by" over the signature. */
 @media (max-width: 639px) {
   .assinatura {
     right: max(10px, env(safe-area-inset-right));
@@ -1570,10 +1584,6 @@
   }
   .mesa-topo {
     gap: 0.5em;
-  }
-  /* Keep the corner switches level with the title, clear of the tagline. */
-  .canto {
-    top: max(0px, env(safe-area-inset-top));
   }
 }
 
@@ -1947,6 +1957,8 @@
   }
 }
 
+/* Pressed (a finger has no hover to warn it) or open: the word is tinted. */
+.tinta-nota[data-viva]:active,
 .tinta-nota[aria-expanded="true"] {
   background-color: rgb(29 70 166 / 0.14);
 }
@@ -2090,11 +2102,52 @@
   animation: none;
 }
 
+/* Closed with a pointer, the slip leaves the way it came, quicker than it
+   arrived: back toward the word, or down off the screen. A key closes it
+   at once (no data-saindo). */
+.nota-margem[data-saindo] {
+  pointer-events: none;
+  animation: nota-sai 150ms var(--ease-out) forwards;
+}
+
+.nota-margem[data-saindo][data-lado="left"] {
+  animation-name: nota-sai-esquerda;
+}
+
+.nota-margem[data-saindo][data-modo="baixo"] {
+  animation: nota-desce 200ms var(--ease-out) forwards;
+}
+
+@keyframes nota-sai {
+  to {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+}
+
+@keyframes nota-sai-esquerda {
+  to {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+}
+
+@keyframes nota-desce {
+  to {
+    transform: translateY(calc(100% + 24px));
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .nota-margem,
   .nota-margem[data-lado="left"],
   .nota-margem[data-modo="baixo"] {
     animation: nota-aparece 200ms ease;
+  }
+  .nota-margem[data-saindo],
+  .nota-margem[data-saindo][data-lado="left"],
+  .nota-margem[data-saindo][data-modo="baixo"] {
+    animation: nota-esvai 150ms ease forwards;
   }
   .tinta-nota,
   .nota-fechar {
@@ -2104,6 +2157,12 @@
 
 @keyframes nota-aparece {
   from {
+    opacity: 0;
+  }
+}
+
+@keyframes nota-esvai {
+  to {
     opacity: 0;
   }
 }
@@ -2160,9 +2219,8 @@
   .menu-acoes [data-estado="copied"] .menu-icone {
     transition: opacity 200ms ease;
   }
-  /* The mark and the title fade in already in place. */
-  .marca,
-  .letra {
+  /* The mark fades in already drawn. */
+  .marca {
     animation: marca-surge 500ms ease both;
   }
   .marca * {
