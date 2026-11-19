@@ -591,6 +591,65 @@ export class DeskEngine {
     return j < 0 ? s.mats.length - 1 : j;
   }
 
+  /**
+   * The outlines of sheets over the candle. Only a poem off its place in the
+   * pile can be: the pile lies beside the candle (on phones, just above it).
+   * Of each such poem, the page nearest you (a page in the air being turned,
+   * or a bundle's first page), then its last sheet, which never turns and
+   * fans out furthest. Every poem gets one outline before any gets a second,
+   * so two sheets passing the candle at once both hide it.
+   */
+  private sheetsOverCandle(): Mat4[] {
+    const { view } = this;
+    const nearest: Mat4[] = [];
+    const behind: Mat4[] = [];
+    for (let i = 0; i <= view.top && i < this.poems.length; i++) {
+      const s = this.poems[i];
+      const resting =
+        s.lift.x <= REST_LIFT + 0.5 &&
+        Math.hypot(s.x.x - s.x.target, s.y.x - s.y.target) < 1;
+      if (!s.onScreen || resting) continue;
+      const isHeld = i === view.top && s.lift.x > DRAG_LIFT + 4;
+      // Of the pages in the air (still drawn, see alpha in pass 3), the one
+      // nearest to lying flat hangs lowest, towards the candle.
+      const front = isHeld
+        ? s.mats
+            .filter((m) => m.fold > 0.002 && m.fold < 0.92)
+            .sort((a, b) => a.fold - b.fold)[0]
+        : s.mats[0];
+      const over = [front, s.mats.at(-1)]
+        .filter((m, k, all) => m && all.indexOf(m) === k && this.overCandle(m.screen))
+        .map((m) => m!.screen);
+      if (over[0]) nearest.push(over[0]);
+      if (over[1]) behind.push(over[1]);
+    }
+    return [...nearest, ...behind];
+  }
+
+  /** Whether a sheet's outline reaches the candle's disc. */
+  private overCandle(sheet: Mat4): boolean {
+    const cx = this.candleX;
+    const cy = this.candleY;
+    // The wax and its soft shadow fill the button's box, all but its corners.
+    const r = this.candleSize * 0.5;
+    const q = this.corners(sheet);
+    let inside = true;
+    let sign = 0;
+    for (let k = 0; k < 4; k++) {
+      const [ax, ay] = q[k];
+      const [bx, by] = q[(k + 1) % 4];
+      const ex = bx - ax;
+      const ey = by - ay;
+      const cross = ex * (cy - ay) - ey * (cx - ax);
+      if (sign === 0) sign = Math.sign(cross);
+      else if (Math.sign(cross) !== sign) inside = false;
+      // Distance from the centre to this edge.
+      const t = Math.max(0, Math.min(1, ((cx - ax) * ex + (cy - ay) * ey) / (ex * ex + ey * ey || 1)));
+      if (Math.hypot(ax + t * ex - cx, ay + t * ey - cy) < r) return true;
+    }
+    return inside;
+  }
+
   private draw() {
     const { W, H, view } = this;
     const n = this.poems.length;
@@ -700,31 +759,23 @@ export class DeskEngine {
     const pile = this.root.querySelector<HTMLElement>(".pilha");
     if (pile) this.set(pile, "opacity", this.fade >= 1 ? "" : this.fade.toFixed(3));
 
-    // The candle is an HTML element above the pile. A sheet held up to read
-    // is nearer than the candle, so it hides the part of the candle behind it.
-    // Two things can: the bundle itself (its last sheet, which never turns,
-    // covers the rest), and a page in the air being turned, which lifts off
-    // the bundle towards you. One clip-path can only cut one hole, so the
-    // button is cut by the bundle and its drawing by the turning page.
+    // The candle is an HTML element above the canvas, but only the pile lies
+    // under it. Any sheet off the pile is nearer than the candle and hides
+    // the part of it behind: one held up to read, one being dragged across
+    // the desk, one set aside sliding away (or back) past it.
     const [flame, lean] = this.flame();
     if (this.candleEl) {
-      const held = this.poems[view.top];
+      this.set(this.candleEl, "--chama", flame.toFixed(3));
+      this.set(this.candleEl, "--vento", `${lean.toFixed(1)}deg`);
+      // One clip-path can only cut one hole, so the button and its drawing
+      // each cut one: the two nearest sheets that reach the candle.
+      const [first, second] = this.sheetsOverCandle();
       const half = this.candleSize / 2;
       const candle = translate(this.candleX - half, this.candleY - half);
       const hide = (sheet: Mat4 | undefined) =>
         sheet ? this.occlude(candle, sheet, this.candleSize, this.candleSize) : "none";
-      const isHeld = held && held.onScreen && held.lift.x > DRAG_LIFT + 4;
-      // Of the pages in the air (still drawn, see alpha in pass 3), the one
-      // nearest to lying flat hangs lowest, towards the candle.
-      const turning = isHeld
-        ? held.mats
-            .filter((m) => m.fold > 0.002 && m.fold < 0.92)
-            .sort((a, b) => a.fold - b.fold)[0]
-        : undefined;
-      this.set(this.candleEl, "--chama", flame.toFixed(3));
-      this.set(this.candleEl, "--vento", `${lean.toFixed(1)}deg`);
-      this.set(this.candleEl, "clipPath", isHeld ? hide(held.mats.at(-1)?.screen) : "none");
-      if (this.candleArt) this.set(this.candleArt, "clipPath", hide(turning?.screen));
+      this.set(this.candleEl, "clipPath", hide(first));
+      if (this.candleArt) this.set(this.candleArt, "clipPath", hide(second));
     }
 
     // Pass 3: paper.
