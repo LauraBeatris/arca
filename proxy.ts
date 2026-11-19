@@ -19,6 +19,18 @@ import {
 export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
+  // No page ends in punctuation, so send a URL that does to the page it
+  // meant instead of a not-found page Google reports as "noindex". Two ways
+  // one arrives: a URL copied out of running text keeps the sentence's full
+  // stop ("…/en/poema/isto."), and Googlebot reads the string "/&" in
+  // React's inline streaming script as a link and asks for "/&".
+  const trimmed = pathname.replace(TRAILING_PUNCTUATION, "");
+  if (trimmed !== pathname) {
+    const url = request.nextUrl.clone();
+    url.pathname = trimmed || "/";
+    return NextResponse.redirect(url, 308);
+  }
+
   if (pathname === "/en" || pathname.startsWith("/en/")) {
     return NextResponse.next();
   }
@@ -45,8 +57,16 @@ export function proxy(request: NextRequest) {
   return NextResponse.rewrite(url);
 }
 
+const TRAILING_PUNCTUATION = /[.,;:!&)\]]+$/;
+
 export const config = {
-  // Pages only: not the translation API, Next's own files, or files with an
-  // extension (the icon).
-  matcher: ["/((?!api/|_next/|.*\\.).*)"],
+  matcher: [
+    // Pages only: not the translation API, Next's own files, or files with an
+    // extension (the icon).
+    "/((?!api/|_next/|.*\\.).*)",
+    // And any URL ending in something other than a letter, digit or slash,
+    // so punctuation stuck to the end of a page URL (see above) reaches the
+    // proxy even though the first pattern skips it for holding a dot.
+    "/((?!api/|_next/).*[^\\w/])",
+  ],
 };
