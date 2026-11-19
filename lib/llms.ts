@@ -45,7 +45,9 @@ function poemEntry(poem: Poem) {
   const parts = [
     `${bookLine(poem)}.`,
     `Marked on ${poem.markedAt}.`,
-    `English interface: ${absoluteUrl(poemPath("en", poem.slug))}.`,
+    // A link, not a bare URL: a bare one ends at the full stop, and crawlers
+    // reading the text took the stop as part of it ("…/en/poema/isto.").
+    `[English interface](${absoluteUrl(poemPath("en", poem.slug))}).`,
   ];
   if (poem.source) parts.push(`Source text: ${poem.source}`);
   return `- [${poem.title}](${absoluteUrl(poemPath("pt", poem.slug))}): ${parts.join(" ")}`;
