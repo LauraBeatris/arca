@@ -167,7 +167,7 @@ export class DeskEngine {
   private view: View;
   private pendingView: View | null = null;
   private renderer: PaperRenderer | null = null;
-  private styles = new WeakMap<HTMLElement, Record<string, string>>();
+  private styles = new WeakMap<HTMLElement | SVGElement, Record<string, string>>();
   private raf = 0;
   private last = 0;
   private destroyed = false;
@@ -205,6 +205,8 @@ export class DeskEngine {
   private askForTilt: (() => void) | null = null;
 
   private candleEl: HTMLElement | null = null;
+  /** The candle's drawing, clipped apart from the button (see draw()). */
+  private candleArt: SVGElement | null = null;
   private candleX = -9999;
   private candleY = -9999;
   private candleSize = 0;
@@ -263,6 +265,7 @@ export class DeskEngine {
 
     this.toneTo = this.toneFrom = toneOf(poems[view.top]?.book);
     this.candleEl = root.querySelector<HTMLElement>(".vela");
+    this.candleArt = this.candleEl?.querySelector("svg") ?? null;
     this.measure();
     this.lampX.snap(this.restLamp()[0]);
     this.lampY.snap(this.restLamp()[1]);
@@ -520,7 +523,7 @@ export class DeskEngine {
 
   /* ----------------------------------------------------------------- draw */
 
-  private set(el: HTMLElement, prop: string, value: string) {
+  private set(el: HTMLElement | SVGElement, prop: string, value: string) {
     let cache = this.styles.get(el);
     if (!cache) this.styles.set(el, (cache = {}));
     if (cache[prop] === value) return;
@@ -699,24 +702,29 @@ export class DeskEngine {
 
     // The candle is an HTML element above the pile. A sheet held up to read
     // is nearer than the candle, so it hides the part of the candle behind it.
+    // Two things can: the bundle itself (its last sheet, which never turns,
+    // covers the rest), and a page in the air being turned, which lifts off
+    // the bundle towards you. One clip-path can only cut one hole, so the
+    // button is cut by the bundle and its drawing by the turning page.
     const [flame, lean] = this.flame();
     if (this.candleEl) {
       const held = this.poems[view.top];
       const half = this.candleSize / 2;
+      const candle = translate(this.candleX - half, this.candleY - half);
+      const hide = (sheet: Mat4 | undefined) =>
+        sheet ? this.occlude(candle, sheet, this.candleSize, this.candleSize) : "none";
+      const isHeld = held && held.onScreen && held.lift.x > DRAG_LIFT + 4;
+      // Of the pages in the air (still drawn, see alpha in pass 3), the one
+      // nearest to lying flat hangs lowest, towards the candle.
+      const turning = isHeld
+        ? held.mats
+            .filter((m) => m.fold > 0.002 && m.fold < 0.92)
+            .sort((a, b) => a.fold - b.fold)[0]
+        : undefined;
       this.set(this.candleEl, "--chama", flame.toFixed(3));
       this.set(this.candleEl, "--vento", `${lean.toFixed(1)}deg`);
-      this.set(
-        this.candleEl,
-        "clipPath",
-        held && held.onScreen && held.lift.x > DRAG_LIFT + 4
-          ? this.occlude(
-              translate(this.candleX - half, this.candleY - half),
-              held.mats[this.frontSheet(held)].screen,
-              this.candleSize,
-              this.candleSize,
-            )
-          : "none",
-      );
+      this.set(this.candleEl, "clipPath", isHeld ? hide(held.mats.at(-1)?.screen) : "none");
+      if (this.candleArt) this.set(this.candleArt, "clipPath", hide(turning?.screen));
     }
 
     // Pass 3: paper.
