@@ -19,9 +19,11 @@ import {
 export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
-  // A URL copied out of running text can keep the sentence's punctuation
-  // ("…/en/poema/isto."). No page ends in one, so send it to the page it
-  // meant instead of a not-found page Google reports as "noindex".
+  // No page ends in punctuation, so send a URL that does to the page it
+  // meant instead of a not-found page Google reports as "noindex". Two ways
+  // one arrives: a URL copied out of running text keeps the sentence's full
+  // stop ("…/en/poema/isto."), and Googlebot reads the string "/&" in
+  // React's inline streaming script as a link and asks for "/&".
   const trimmed = pathname.replace(TRAILING_PUNCTUATION, "");
   if (trimmed !== pathname) {
     const url = request.nextUrl.clone();
@@ -55,7 +57,7 @@ export function proxy(request: NextRequest) {
   return NextResponse.rewrite(url);
 }
 
-const TRAILING_PUNCTUATION = /[.,;:!)\]]+$/;
+const TRAILING_PUNCTUATION = /[.,;:!&)\]]+$/;
 
 export const config = {
   matcher: [
